@@ -7,9 +7,9 @@ from collections.abc import Mapping
 from typing import Any
 
 import voluptuous as vol
-from homeassistant.const import CONF_EXCLUDE_ENTITIES, CONF_INCLUDE_ENTITIES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.entityfilter import CONF_EXCLUDE_ENTITIES, CONF_INCLUDE_ENTITIES
 
 from .const import DOMAIN
 from .patcher import apply_patch
