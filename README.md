@@ -66,6 +66,46 @@ homekit_heatercooler:
 - Remove stale tiles and assign the newly exposed HeaterCooler accessory to the desired room.
 - Existing HomeKit automations/scenes tied to old tiles may need updates.
 
+## How this patch works
+
+This integration uses a runtime patch ("monkey patch") during Home Assistant startup:
+
+- It replaces HomeKit accessory selection functions in memory for the running process.
+- It only redirects explicitly included entities (for example `climate.aircon`) to `HeaterCooler`.
+- It does **not** modify Home Assistant core files on disk.
+
+In practice, this is a targeted runtime override inside a custom integration.
+
+## Persistence and upgrade behavior
+
+What persists:
+
+- Reboots and normal Home Assistant restarts (patch reapplies on startup)
+- HomeKit Bridge reloads
+
+What can remove or break it:
+
+- Removing `custom_components/homekit_heatercooler`
+- Removing `homekit_heatercooler:` from `configuration.yaml`
+- Removing the entity from HomeKit bridge `include_entities`
+- Restores/rebuilds that overwrite `/config/custom_components` or config
+- Home Assistant core updates that change HomeKit internals this patch hooks into
+
+So yes: future Home Assistant/HomeKit Bridge core upgrades can break this patch, and the behavior can fall back to default HomeKit climate mapping.
+
+## Official references
+
+- Home Assistant developer docs: where integrations are loaded from (`custom_components` takes precedence)  
+  https://developers.home-assistant.io/docs/creating_integration_file_structure/
+- Home Assistant developer tips: testing core integration changes by copying into `/config/custom_components`, and reminder that this overrides core behavior until removed  
+  https://developers.home-assistant.io/docs/development_tips/
+- Home Assistant manifest requirements: custom integrations require a `version`  
+  https://developers.home-assistant.io/docs/creating_integration_manifest/
+- Home Assistant core changelogs (watch each upgrade for breaking changes)  
+  https://www.home-assistant.io/changelogs/core-2026.2/
+- Python `patch()` reference (official standard-library concept for runtime replacement in Python)  
+  https://docs.python.org/3/library/unittest.mock.html#patch
+
 ## Development (uv)
 
 ```bash
