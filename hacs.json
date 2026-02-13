@@ -1,0 +1,6 @@
+{
+  "name": "HomeKit HeaterCooler Bridge",
+  "hacs": "2.0.0",
+  "render_readme": true,
+  "homeassistant": "2026.2.0"
+}
