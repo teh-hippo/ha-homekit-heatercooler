@@ -1,13 +1,13 @@
 {
   "domain": "homekit_heatercooler",
   "name": "HomeKit HeaterCooler Bridge",
+  "after_dependencies": ["homekit"],
   "codeowners": ["@teh-hippo"],
+  "dependencies": ["homekit"],
   "documentation": "https://github.com/teh-hippo/ha-homekit-heatercooler",
-  "issue_tracker": "https://github.com/teh-hippo/ha-homekit-heatercooler/issues",
   "integration_type": "helper",
   "iot_class": "local_push",
-  "version": "0.1.0",
-  "dependencies": ["homekit"],
+  "issue_tracker": "https://github.com/teh-hippo/ha-homekit-heatercooler/issues",
   "requirements": [],
-  "after_dependencies": ["homekit"]
+  "version": "0.1.0"
 }
