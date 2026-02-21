@@ -79,7 +79,7 @@ class HomeKitHeaterCoolerPatchedEntitiesSensor(SensorEntity):  # type: ignore[mi
 
     def _handle_patch_status_update(self) -> None:
         """Write updated patch status to Home Assistant state."""
-        self.async_write_ha_state()
+        self.schedule_update_ha_state()
 
     @property
     def _patch_status(self) -> dict[str, Any]:
