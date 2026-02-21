@@ -11,7 +11,7 @@ Expose selected Home Assistant `climate` entities as a native **HeaterCooler** a
 
 On current core releases, HomeKit Bridge maps climate entities to Thermostat behavior. For Daikin-style units, this can be a worse UX than a native HeaterCooler tile.
 
-This custom integration changes HomeKit mapping for explicitly included entities (for example, `climate.aircon`), while leaving all other entities untouched.
+This repo is a temporary stop-gap that builds on Home Assistant's existing HomeKit Bridge and only remaps explicitly included entities (for example, `climate.aircon`). Everything else stays untouched.
 
 ## Features
 
