@@ -52,9 +52,6 @@ class HomeKitHeaterCoolerConfigFlow(ConfigFlow, domain=DOMAIN):  # type: ignore[
 
     async def async_step_user(self, user_input: dict[str, Any] | None = None) -> Any:
         """Handle the initial step."""
-        if self._async_current_entries():
-            return self.async_abort(reason="already_configured")
-
         if user_input is not None:
             return self.async_create_entry(
                 title="HomeKit HeaterCooler Bridge",
