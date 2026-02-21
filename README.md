@@ -109,11 +109,10 @@ So yes: future Home Assistant/HomeKit Bridge core upgrades can break this patch,
 ## Development (uv)
 
 ```bash
-uv sync --group dev
-uv run ruff check .
-uv run ruff format --check .
-python -m compileall custom_components
+bash scripts/check.sh
 ```
+
+Requires [uv](https://docs.astral.sh/uv/). Uses [Conventional Commits](https://www.conventionalcommits.org/).
 
 ## License
 

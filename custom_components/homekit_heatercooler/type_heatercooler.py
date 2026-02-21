@@ -43,7 +43,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import State, callback
+from homeassistant.core import State
 from homeassistant.exceptions import ServiceNotFound, ServiceValidationError
 from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.percentage import (
@@ -124,10 +124,10 @@ def _temp(state: State, key: str, unit: str) -> float | None:
     value = state.attributes.get(key)
     if value is None:
         return None
-    return temperature_to_homekit(value, unit)
+    return float(temperature_to_homekit(value, unit))
 
 
-class HeaterCooler(HomeAccessory):
+class HeaterCooler(HomeAccessory):  # type: ignore[misc]
     """Expose a climate entity as a native HomeKit HeaterCooler."""
 
     def __init__(self, *args: Any) -> None:
@@ -434,7 +434,6 @@ class HeaterCooler(HomeAccessory):
             return hk_value
         return None
 
-    @callback
     def async_update_state(self, new_state: State) -> None:
         """Update HomeKit characteristics from Home Assistant state."""
         attributes = new_state.attributes

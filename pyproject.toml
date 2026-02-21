@@ -9,4 +9,46 @@ requires-python = ">=3.12"
 [dependency-groups]
 dev = [
   "ruff>=0.13.0",
+  "mypy>=1.15",
 ]
+
+[tool.mypy]
+python_version = "3.13"
+strict = true
+warn_unreachable = true
+
+[[tool.mypy.overrides]]
+module = [
+  "homeassistant.*",
+  "pyhap",
+  "pyhap.*",
+  "pytest_homeassistant_custom_component.*",
+  "voluptuous",
+  "voluptuous.*",
+]
+ignore_missing_imports = true
+
+[tool.semantic_release]
+version_toml = ["pyproject.toml:project.version"]
+version_variables = ["custom_components/homekit_heatercooler/manifest.json:version"]
+build_command = ""
+commit_message = "chore(release): {version}"
+tag_format = "v{version}"
+
+[tool.semantic_release.commit_parser_options]
+patch_tags = ["fix", "perf", "build"]
+other_allowed_tags = ["chore", "ci", "docs", "style", "refactor", "test"]
+
+[tool.semantic_release.branches.master]
+match = "master"
+prerelease = false
+
+[tool.semantic_release.changelog]
+mode = "init"
+
+[tool.semantic_release.changelog.default_templates]
+changelog_file = "CHANGELOG.md"
+
+[tool.semantic_release.remote]
+type = "github"
+token = { env = "GITHUB_TOKEN" }
