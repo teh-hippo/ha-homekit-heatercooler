@@ -30,7 +30,7 @@ class PatchState:
     original_homekit_get_accessory: Callable[..., Any]
 
 
-def _supports_heatercooler(state: State) -> bool:
+def supports_heatercooler(state: State) -> bool:
     """Return True if a climate entity has capabilities suited to HeaterCooler."""
     features = int(state.attributes.get(ATTR_SUPPORTED_FEATURES, 0))
     supports_fan_or_swing = bool(features & ClimateEntityFeature.FAN_MODE or features & ClimateEntityFeature.SWING_MODE)
@@ -83,7 +83,7 @@ def apply_patch(hass: HomeAssistant, include_entities: set[str], exclude_entitie
                 patch_state.include_entities,
                 patch_state.exclude_entities,
             )
-            and _supports_heatercooler(state)
+            and supports_heatercooler(state)
         ):
             name = config.get(CONF_NAME, state.name)
             return homekit_accessories.TYPES["HeaterCooler"](hass_obj, driver, name, state.entity_id, aid, config)

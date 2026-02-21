@@ -19,6 +19,7 @@ This repo is a temporary stop-gap that builds on Home Assistant's existing HomeK
 - Maps HVAC mode, active state, thresholds, fan speed, and swing mode
 - Supports single setpoint and dual threshold climates
 - Safe-by-default targeting (`include_entities` required)
+- Adds a diagnostic sensor so you can verify active patch coverage in Home Assistant UI
 - No changes to your live system needed until you install it
 
 ## Installation
@@ -47,6 +48,8 @@ No `configuration.yaml` changes are required.
 5. Save
 
 You can change these later from **Settings → Devices & Services → HomeKit HeaterCooler Bridge → Configure**.
+
+To confirm the override is active, open the integration device page and check the **Patched entities** diagnostic sensor.
 
 ## How this patch works
 
