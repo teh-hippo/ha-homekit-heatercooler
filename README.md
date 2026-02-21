@@ -7,15 +7,11 @@
 
 Expose selected Home Assistant `climate` entities as a native **HeaterCooler** accessory in Apple Home via HomeKit Bridge.
 
-This integration is inspired by Home Assistant core PR #148231:
-
-- https://github.com/home-assistant/core/pull/148231
-
 ## Why this exists
 
 On current core releases, HomeKit Bridge maps climate entities to Thermostat behavior. For Daikin-style units, this can be a worse UX than a native HeaterCooler tile.
 
-This custom integration patches HomeKit mapping for explicitly included entities (for example, `climate.aircon`), while leaving all other entities untouched.
+This custom integration changes HomeKit mapping for explicitly included entities (for example, `climate.aircon`), while leaving all other entities untouched.
 
 ## Features
 
@@ -42,69 +38,30 @@ This custom integration patches HomeKit mapping for explicitly included entities
 
 ## Configuration
 
-Add this to `configuration.yaml`:
+No `configuration.yaml` changes are required.
 
-```yaml
-homekit_heatercooler:
-  include_entities:
-    - climate.aircon
-```
+1. Go to **Settings → Devices & Services → Add Integration**
+2. Search for **HomeKit HeaterCooler Bridge**
+3. Select one or more `climate` entities in **Include entities**
+4. Optionally set **Exclude entities**
+5. Save
 
-Optional exclusions:
-
-```yaml
-homekit_heatercooler:
-  include_entities:
-    - climate.aircon
-  exclude_entities:
-    - climate.some_other_unit
-```
-
-## Migration notes
-
-- HomeKit may show old thermostat/fan tiles from previous mapping.
-- Remove stale tiles and assign the newly exposed HeaterCooler accessory to the desired room.
-- Existing HomeKit automations/scenes tied to old tiles may need updates.
+You can change these later from **Settings → Devices & Services → HomeKit HeaterCooler Bridge → Configure**.
 
 ## How this patch works
 
-This integration uses a runtime patch ("monkey patch") during Home Assistant startup:
+- Only entities listed in `include_entities` are affected.
+- Those entities are shown in Apple Home as **HeaterCooler** instead of Thermostat.
+- All other HomeKit entities keep their normal behavior.
+- Home Assistant core files are not modified on disk.
 
-- It replaces HomeKit accessory selection functions in memory for the running process.
-- It only redirects explicitly included entities (for example `climate.aircon`) to `HeaterCooler`.
-- It does **not** modify Home Assistant core files on disk.
+This remains active across normal restarts as long as:
 
-In practice, this is a targeted runtime override inside a custom integration.
+- `custom_components/homekit_heatercooler` is installed
+- one or more target entities are configured in this integration
+- your target entities are still included in HomeKit Bridge
 
-## Persistence and upgrade behavior
-
-What persists:
-
-- Reboots and normal Home Assistant restarts (patch reapplies on startup)
-- HomeKit Bridge reloads
-
-What can remove or break it:
-
-- Removing `custom_components/homekit_heatercooler`
-- Removing `homekit_heatercooler:` from `configuration.yaml`
-- Removing the entity from HomeKit bridge `include_entities`
-- Restores/rebuilds that overwrite `/config/custom_components` or config
-- Home Assistant core updates that change HomeKit internals this patch hooks into
-
-So yes: future Home Assistant/HomeKit Bridge core upgrades can break this patch, and the behavior can fall back to default HomeKit climate mapping.
-
-## Official references
-
-- Home Assistant developer docs: where integrations are loaded from (`custom_components` takes precedence)  
-  https://developers.home-assistant.io/docs/creating_integration_file_structure/
-- Home Assistant developer tips: testing core integration changes by copying into `/config/custom_components`, and reminder that this overrides core behavior until removed  
-  https://developers.home-assistant.io/docs/development_tips/
-- Home Assistant manifest requirements: custom integrations require a `version`  
-  https://developers.home-assistant.io/docs/creating_integration_manifest/
-- Home Assistant core changelogs (watch each upgrade for breaking changes)  
-  https://www.home-assistant.io/changelogs/core-2026.2/
-- Python `patch()` reference (official standard-library concept for runtime replacement in Python)  
-  https://docs.python.org/3/library/unittest.mock.html#patch
+After some Home Assistant updates, HomeKit internals may change. If that happens, entities can fall back to default mapping until this integration is updated.
 
 ## Development (uv)
 

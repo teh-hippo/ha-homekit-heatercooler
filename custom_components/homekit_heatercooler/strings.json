@@ -1,0 +1,29 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Set up HomeKit HeaterCooler Bridge",
+        "description": "Choose which climate entities should be exposed as HeaterCooler in Apple Home.",
+        "data": {
+          "include_entities": "Include entities",
+          "exclude_entities": "Exclude entities"
+        }
+      }
+    },
+    "abort": {
+      "already_configured": "HomeKit HeaterCooler Bridge is already configured."
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "title": "HomeKit HeaterCooler Bridge options",
+        "description": "Update which climate entities are exposed as HeaterCooler in Apple Home.",
+        "data": {
+          "include_entities": "Include entities",
+          "exclude_entities": "Exclude entities"
+        }
+      }
+    }
+  }
+}
