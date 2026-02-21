@@ -50,18 +50,18 @@ You can change these later from **Settings → Devices & Services → HomeKit He
 
 ## How this patch works
 
-- Only entities listed in `include_entities` are affected.
-- Those entities are shown in Apple Home as **HeaterCooler** instead of Thermostat.
-- All other HomeKit entities keep their normal behavior.
-- Home Assistant core files are not modified on disk.
+- You select one or more `climate` entities in this integration.
+- Those entities appear in Apple Home as **HeaterCooler** instead of Thermostat.
+- Everything else in HomeKit keeps its normal behavior.
+- Home Assistant core files are not changed on disk.
 
-This remains active across normal restarts as long as:
+It keeps working across normal restarts while:
 
 - `custom_components/homekit_heatercooler` is installed
-- one or more target entities are configured in this integration
-- your target entities are still included in HomeKit Bridge
+- at least one target entity is configured in this integration
+- the target entities are included in HomeKit Bridge
 
-After some Home Assistant updates, HomeKit internals may change. If that happens, entities can fall back to default mapping until this integration is updated.
+After some Home Assistant updates, mapping can fall back to default behavior until this integration is updated.
 
 ## Development (uv)
 
