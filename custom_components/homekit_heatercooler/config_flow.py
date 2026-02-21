@@ -66,7 +66,7 @@ class HomeKitHeaterCoolerConfigFlow(ConfigFlow, domain=DOMAIN):  # type: ignore[
     @staticmethod
     def async_get_options_flow(config_entry: ConfigEntry) -> Any:
         """Create the options flow."""
-        return HomeKitHeaterCoolerOptionsFlow(config_entry)
+        return HomeKitHeaterCoolerOptionsFlow()
 
 
 class HomeKitHeaterCoolerOptionsFlow(OptionsFlow):  # type: ignore[misc]
