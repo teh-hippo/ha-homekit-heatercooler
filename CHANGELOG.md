@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v1.1.2 (2026-02-21)
+
+### Bug Fixes
+
+- Add patch diagnostics sensor
+  ([`517ac6d`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/517ac6dfa26e59507e79b65a51d29d06bbf1674c))
+
+
 ## v1.1.1 (2026-02-21)
 
 ### Bug Fixes
