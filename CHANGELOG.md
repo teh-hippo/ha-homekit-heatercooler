@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v1.1.5 (2026-02-21)
+
+### Bug Fixes
+
+- Instantiate options flow without args
+  ([`a7dd525`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/a7dd5251b575d19fba801d8c6f7c5fbdfc12c81a))
+
+
 ## v1.1.4 (2026-02-21)
 
 ### Bug Fixes
