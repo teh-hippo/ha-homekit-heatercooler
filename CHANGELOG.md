@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v1.1.0 (2026-02-21)
+
+### Bug Fixes
+
+- Sort manifest keys for hassfest
+  ([`6b3b8ce`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/6b3b8ce1379960bc065933cfc548b1dca787c9f2))
+
+### Features
+
+- Add UI configuration flow
+  ([`7df7b6a`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/7df7b6a57970db3772721cff0f77a8facc23d4ff))
+
+
 ## v1.0.0 (2026-02-21)
 
 
