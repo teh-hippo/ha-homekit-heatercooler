@@ -1,6 +1,22 @@
 # CHANGELOG
 
 
+## v1.1.1 (2026-02-21)
+
+### Bug Fixes
+
+- Classify integration as service
+  ([`3b83217`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/3b8321727ac621a8e547a0f38597ce8b8805f201))
+
+### Documentation
+
+- Clarify why this exists
+  ([`39cdb3a`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/39cdb3ac291093216b40449f0571e40ca22ed2d2))
+
+- Refine README wording
+  ([`4d8faec`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/4d8faec69f0860a097f488bccef32dfcef0ef76f))
+
+
 ## v1.1.0 (2026-02-21)
 
 ### Bug Fixes
