@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v1.1.4 (2026-02-21)
+
+### Bug Fixes
+
+- Make diagnostics update thread-safe
+  ([`e20afae`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/e20afae1acf6e037b6d9429c754604841d02e4bd))
+
+
 ## v1.1.3 (2026-02-21)
 
 ### Bug Fixes
