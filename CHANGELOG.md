@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v1.1.3 (2026-02-21)
+
+### Bug Fixes
+
+- Resolve options flow 500 error
+  ([`5167c1c`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/5167c1cbf3fe829203b83e70d49451b440840d83))
+
+
 ## v1.1.2 (2026-02-21)
 
 ### Bug Fixes
