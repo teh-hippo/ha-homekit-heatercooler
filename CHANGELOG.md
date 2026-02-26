@@ -1,6 +1,24 @@
 # CHANGELOG
 
 
+## v1.1.6 (2026-02-26)
+
+### Bug Fixes
+
+- Refresh heatercooler diagnostics status
+  ([`a448d88`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/a448d8878f8ffbedfeb0f0f1664b0572e72af4b2))
+
+### Chores
+
+- **lock**: Sync project version in uv.lock
+  ([`a436cf4`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/a436cf43b9b5771e41c3a8787bbc116a639d449e))
+
+### Continuous Integration
+
+- **release**: Maintain latest tag
+  ([`f1f536d`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/f1f536ddb7585db92bc72407ca1706c18952c8c9))
+
+
 ## v1.1.5 (2026-02-21)
 
 ### Bug Fixes
