@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v1.1.7 (2026-02-26)
+
+### Bug Fixes
+
+- **release**: Handle missing latest tag ref
+  ([`dce7d3c`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/dce7d3c990843a0f9b1bff10854df81453bcb4c5))
+
+
 ## v1.1.6 (2026-02-26)
 
 ### Bug Fixes
