@@ -3,18 +3,23 @@
 from __future__ import annotations
 
 import logging
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from typing import Any
 
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entityfilter import CONF_EXCLUDE_ENTITIES, CONF_INCLUDE_ENTITIES
+from homeassistant.helpers.event import async_track_state_change_event
+from homeassistant.util import dt as dt_util
 
 from .const import (
+    DATA_PATCH_STATE,
     DATA_PATCH_STATUS,
+    DATA_PATCH_STATUS_UNSUB,
     DATA_YAML_EXCLUDE_ENTITIES,
     DATA_YAML_INCLUDE_ENTITIES,
     DOMAIN,
@@ -97,6 +102,22 @@ def _entity_set(value: Any) -> set[str]:
 def _refresh_patch(hass: HomeAssistant) -> None:
     """Apply patch with merged YAML and UI-configured entities."""
     domain_data = hass.data.setdefault(DOMAIN, {})
+    include_entities, exclude_entities = _combined_entities(hass)
+    apply_patch(hass, include_entities, exclude_entities)
+    _register_patch_status_refresh(hass, include_entities, exclude_entities)
+    _update_patch_status(hass, include_entities, exclude_entities)
+    patch_status = domain_data[DATA_PATCH_STATUS]
+    _LOGGER.info(
+        "HomeKit HeaterCooler patch loaded (include_entities=%s, exclude_entities=%s, patched_entities=%s)",
+        sorted(include_entities),
+        sorted(exclude_entities),
+        patch_status["patched_entities"],
+    )
+
+
+def _combined_entities(hass: HomeAssistant) -> tuple[set[str], set[str]]:
+    """Collect include/exclude entities from YAML and config entries."""
+    domain_data = hass.data.setdefault(DOMAIN, {})
     include_entities = _entity_set(domain_data.get(DATA_YAML_INCLUDE_ENTITIES))
     exclude_entities = _entity_set(domain_data.get(DATA_YAML_EXCLUDE_ENTITIES))
 
@@ -105,16 +126,63 @@ def _refresh_patch(hass: HomeAssistant) -> None:
         include_entities.update(entry_include_entities)
         exclude_entities.update(entry_exclude_entities)
 
-    apply_patch(hass, include_entities, exclude_entities)
-    patch_status = _build_patch_status(hass, include_entities, exclude_entities)
-    domain_data[DATA_PATCH_STATUS] = patch_status
-    async_dispatcher_send(hass, SIGNAL_PATCH_STATUS_UPDATED)
-    _LOGGER.info(
-        "HomeKit HeaterCooler patch loaded (include_entities=%s, exclude_entities=%s, patched_entities=%s)",
-        sorted(include_entities),
-        sorted(exclude_entities),
-        patch_status["patched_entities"],
+    return include_entities, exclude_entities
+
+
+def _register_patch_status_refresh(
+    hass: HomeAssistant,
+    include_entities: set[str],
+    exclude_entities: set[str],
+) -> None:
+    """Track status-relevant events and refresh diagnostics."""
+    domain_data = hass.data.setdefault(DOMAIN, {})
+    unsubscribe_previous = domain_data.get(DATA_PATCH_STATUS_UNSUB)
+    if callable(unsubscribe_previous):
+        unsubscribe_previous()
+
+    target_entities = sorted(include_entities - exclude_entities)
+
+    def _handle_status_refresh(_: Event | None = None) -> None:
+        current_include_entities, current_exclude_entities = _combined_entities(hass)
+        _update_patch_status(hass, current_include_entities, current_exclude_entities)
+
+    unsubscribe_state: Callable[[], None] | None = None
+    if target_entities:
+        unsubscribe_state = async_track_state_change_event(
+            hass,
+            target_entities,
+            _handle_status_refresh,
+        )
+
+    unsubscribe_started: Callable[[], None] | None = None
+    if not hass.is_running:
+        unsubscribe_started = hass.bus.async_listen_once(
+            EVENT_HOMEASSISTANT_STARTED,
+            _handle_status_refresh,
+        )
+
+    def _unsubscribe() -> None:
+        if unsubscribe_state:
+            unsubscribe_state()
+        if unsubscribe_started:
+            unsubscribe_started()
+
+    domain_data[DATA_PATCH_STATUS_UNSUB] = _unsubscribe
+
+
+def _update_patch_status(
+    hass: HomeAssistant,
+    include_entities: set[str],
+    exclude_entities: set[str],
+) -> None:
+    """Recompute and publish patch diagnostics."""
+    domain_data = hass.data.setdefault(DOMAIN, {})
+    domain_data[DATA_PATCH_STATUS] = _build_patch_status(
+        hass,
+        include_entities,
+        exclude_entities,
     )
+    async_dispatcher_send(hass, SIGNAL_PATCH_STATUS_UPDATED)
 
 
 def _build_patch_status(
@@ -142,14 +210,20 @@ def _build_patch_status(
             continue
         unsupported_entities.append(entity_id)
 
+    domain_data = hass.data.get(DOMAIN)
+    hook_installed = bool(isinstance(domain_data, dict) and domain_data.get(DATA_PATCH_STATE))
+
     return {
         "patch_active": bool(patched_entities),
+        "hook_installed": hook_installed,
         "include_entities": sorted(include_entities),
         "exclude_entities": sorted(exclude_entities),
         "target_entities": target_entities,
         "patched_entities": patched_entities,
+        "currently_patchable_entities": patched_entities,
         "patched_entities_count": len(patched_entities),
         "missing_entities": missing_entities,
         "unsupported_entities": unsupported_entities,
         "non_climate_entities": non_climate_entities,
+        "last_refresh": dt_util.utcnow().isoformat(),
     }
