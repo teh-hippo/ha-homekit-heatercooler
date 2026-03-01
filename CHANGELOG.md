@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v1.1.9 (2026-03-01)
+
+### Bug Fixes
+
+- Run patch status callbacks on event loop
+  ([`7852a16`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/7852a16900ea491104c3fd88f9734c1804e7f779))
+
+
 ## v1.1.8 (2026-03-01)
 
 ### Bug Fixes
