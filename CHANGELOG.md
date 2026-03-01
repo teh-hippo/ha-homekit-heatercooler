@@ -1,6 +1,24 @@
 # CHANGELOG
 
 
+## v1.1.8 (2026-03-01)
+
+### Bug Fixes
+
+- Use thread-safe dispatcher signal
+  ([`ccfc3e5`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/ccfc3e576f57973175c10da0250e8a42432b94c6))
+
+### Chores
+
+- **lock**: Sync project version in uv.lock
+  ([`73e6cd8`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/73e6cd88300d1ccdb5ebc9c4ab70b3b4ac890fc0))
+
+### Continuous Integration
+
+- Publish latest release alias
+  ([`95b96f3`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/95b96f3fa32ef04f5ce8147236eead003679aad1))
+
+
 ## v1.1.7 (2026-02-26)
 
 ### Bug Fixes
