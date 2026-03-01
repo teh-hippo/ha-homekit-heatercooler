@@ -6,7 +6,7 @@ from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import DeviceInfo, EntityCategory
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
@@ -80,9 +80,10 @@ class HomeKitHeaterCoolerPatchedEntitiesSensor(SensorEntity):  # type: ignore[mi
             )
         )
 
+    @callback  # type: ignore[untyped-decorator]
     def _handle_patch_status_update(self) -> None:
         """Write updated patch status to Home Assistant state."""
-        self.schedule_update_ha_state()
+        self.async_write_ha_state()
 
     @property
     def _patch_status(self) -> dict[str, Any]:

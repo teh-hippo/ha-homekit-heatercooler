@@ -9,7 +9,7 @@ from typing import Any
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entityfilter import CONF_EXCLUDE_ENTITIES, CONF_INCLUDE_ENTITIES
@@ -142,6 +142,7 @@ def _register_patch_status_refresh(
 
     target_entities = sorted(include_entities - exclude_entities)
 
+    @callback  # type: ignore[untyped-decorator]
     def _handle_status_refresh(_: Event | None = None) -> None:
         current_include_entities, current_exclude_entities = _combined_entities(hass)
         _update_patch_status(hass, current_include_entities, current_exclude_entities)
