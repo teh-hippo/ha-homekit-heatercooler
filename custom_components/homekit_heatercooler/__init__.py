@@ -11,7 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.dispatcher import async_dispatcher_send
+from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entityfilter import CONF_EXCLUDE_ENTITIES, CONF_INCLUDE_ENTITIES
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util import dt as dt_util
@@ -182,7 +182,7 @@ def _update_patch_status(
         include_entities,
         exclude_entities,
     )
-    async_dispatcher_send(hass, SIGNAL_PATCH_STATUS_UPDATED)
+    dispatcher_send(hass, SIGNAL_PATCH_STATUS_UPDATED)
 
 
 def _build_patch_status(
