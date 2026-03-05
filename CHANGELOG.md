@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v1.2.5 (2026-03-05)
+
+### Build System
+
+- **deps**: Bump astral-sh/setup-uv from 6 to 7
+  ([`c9433c0`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/c9433c0540b9c4fcdd3295d5e822d463e7d40460))
+
+
 ## v1.2.4 (2026-03-05)
 
 ### Build System
