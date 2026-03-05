@@ -1,6 +1,24 @@
 # CHANGELOG
 
 
+## v1.2.4 (2026-03-05)
+
+### Build System
+
+- **deps**: Bump actions/checkout from 4 to 6
+  ([#4](https://github.com/teh-hippo/ha-homekit-heatercooler/pull/4),
+  [`dca217d`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/dca217d6ebbfe47dd72daf03156cce93b1424e0c))
+
+- **deps**: Bump github/codeql-action from 3 to 4
+  ([#2](https://github.com/teh-hippo/ha-homekit-heatercooler/pull/2),
+  [`e766f1d`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/e766f1d5aaea95a4bfdb2445b7eb7e84b0e9233c))
+
+### Continuous Integration
+
+- Harden dependabot and release flow
+  ([`f2d9912`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/f2d991249859e7150945206a483326728abcbc7d))
+
+
 ## v1.2.3 (2026-03-05)
 
 ### Bug Fixes
