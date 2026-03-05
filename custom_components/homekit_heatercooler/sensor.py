@@ -46,8 +46,8 @@ class HomeKitHeaterCoolerPatchedEntitiesSensor(SensorEntity):  # type: ignore[mi
         """Return patch diagnostics."""
         status = self._patch_status
         return {
-            "patch_active": bool(status.get("patch_active", False)),
-            "hook_installed": bool(status.get("hook_installed", False)),
+            "patch_active": status.get("patch_active", False),
+            "hook_installed": status.get("hook_installed", False),
             "include_entities": status.get("include_entities", []),
             "exclude_entities": status.get("exclude_entities", []),
             "target_entities": status.get("target_entities", []),

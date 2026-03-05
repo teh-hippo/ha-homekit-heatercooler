@@ -33,7 +33,6 @@ jobs:
         uses: hacs/action@main
         with:
           category: integration
-          ignore: brands
           comment: false
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -43,6 +42,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.14"
       - run: uv run ruff check .
       - run: uv run ruff format --check .
 
@@ -52,6 +53,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.14"
       - run: uv run mypy --ignore-missing-imports custom_components/homekit_heatercooler
 
   smoke:
@@ -59,4 +62,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - run: python -m compileall custom_components
+      - uses: astral-sh/setup-uv@v6
+        with:
+          python-version: "3.14"
+      - run: uv run python -m compileall custom_components

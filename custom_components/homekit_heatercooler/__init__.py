@@ -46,7 +46,7 @@ CONFIG_SCHEMA = vol.Schema(
 async def async_setup(hass: HomeAssistant, config: Mapping[str, Any]) -> bool:
     """Patch HomeKit climate selection and register HeaterCooler accessory."""
     include_entities, exclude_entities = _yaml_entities_from_config(config)
-    domain_data = hass.data.setdefault(DOMAIN, {})
+    domain_data = _domain_data(hass)
     domain_data[DATA_YAML_INCLUDE_ENTITIES] = include_entities
     domain_data[DATA_YAML_EXCLUDE_ENTITIES] = exclude_entities
     _refresh_patch(hass)
@@ -99,9 +99,19 @@ def _entity_set(value: Any) -> set[str]:
     return {item for item in value if isinstance(item, str)}
 
 
+def _domain_data(hass: HomeAssistant) -> dict[str, Any]:
+    """Return mutable domain-scoped storage."""
+    existing = hass.data.get(DOMAIN)
+    if isinstance(existing, dict):
+        return existing
+    domain_data: dict[str, Any] = {}
+    hass.data[DOMAIN] = domain_data
+    return domain_data
+
+
 def _refresh_patch(hass: HomeAssistant) -> None:
     """Apply patch with merged YAML and UI-configured entities."""
-    domain_data = hass.data.setdefault(DOMAIN, {})
+    domain_data = _domain_data(hass)
     include_entities, exclude_entities = _combined_entities(hass)
     apply_patch(hass, include_entities, exclude_entities)
     _register_patch_status_refresh(hass, include_entities, exclude_entities)
@@ -117,7 +127,7 @@ def _refresh_patch(hass: HomeAssistant) -> None:
 
 def _combined_entities(hass: HomeAssistant) -> tuple[set[str], set[str]]:
     """Collect include/exclude entities from YAML and config entries."""
-    domain_data = hass.data.setdefault(DOMAIN, {})
+    domain_data = _domain_data(hass)
     include_entities = _entity_set(domain_data.get(DATA_YAML_INCLUDE_ENTITIES))
     exclude_entities = _entity_set(domain_data.get(DATA_YAML_EXCLUDE_ENTITIES))
 
@@ -135,7 +145,7 @@ def _register_patch_status_refresh(
     exclude_entities: set[str],
 ) -> None:
     """Track status-relevant events and refresh diagnostics."""
-    domain_data = hass.data.setdefault(DOMAIN, {})
+    domain_data = _domain_data(hass)
     unsubscribe_previous = domain_data.get(DATA_PATCH_STATUS_UNSUB)
     if callable(unsubscribe_previous):
         unsubscribe_previous()
@@ -177,7 +187,7 @@ def _update_patch_status(
     exclude_entities: set[str],
 ) -> None:
     """Recompute and publish patch diagnostics."""
-    domain_data = hass.data.setdefault(DOMAIN, {})
+    domain_data = _domain_data(hass)
     domain_data[DATA_PATCH_STATUS] = _build_patch_status(
         hass,
         include_entities,
@@ -211,8 +221,7 @@ def _build_patch_status(
             continue
         unsupported_entities.append(entity_id)
 
-    domain_data = hass.data.get(DOMAIN)
-    hook_installed = bool(isinstance(domain_data, dict) and domain_data.get(DATA_PATCH_STATE))
+    hook_installed = bool(_domain_data(hass).get(DATA_PATCH_STATE))
 
     return {
         "patch_active": bool(patched_entities),

@@ -11,7 +11,7 @@ echo "=== Mypy ==="
 uv run mypy --ignore-missing-imports custom_components/homekit_heatercooler
 
 echo "=== Smoke ==="
-python -m compileall custom_components
+uv run python -m compileall custom_components
 
 echo ""
 echo "✅ All checks passed — safe to push."

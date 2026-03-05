@@ -40,11 +40,7 @@ def supports_heatercooler(state: State) -> bool:
 
 def _should_patch_entity(entity_id: str, include_entities: set[str], exclude_entities: set[str]) -> bool:
     """Return True when this entity should be redirected to HeaterCooler."""
-    if entity_id in exclude_entities:
-        return False
-    if not include_entities:
-        return False
-    return entity_id in include_entities
+    return bool(include_entities) and entity_id in include_entities and entity_id not in exclude_entities
 
 
 def apply_patch(hass: HomeAssistant, include_entities: set[str], exclude_entities: set[str]) -> None:

@@ -115,7 +115,7 @@ def _as_float(value: Any) -> float | None:
         return None
     try:
         return float(value)
-    except (TypeError, ValueError):
+    except TypeError, ValueError:
         return None
 
 
@@ -161,7 +161,7 @@ class HeaterCooler(HomeAccessory):  # type: ignore[misc]
         raw_step = attributes.get("temperature_step", 1)
         try:
             self._step = float(raw_step)
-        except (TypeError, ValueError):
+        except TypeError, ValueError:
             self._step = 1.0
 
         chars = [
@@ -276,7 +276,7 @@ class HeaterCooler(HomeAccessory):  # type: ignore[misc]
         if target_mode is not None:
             try:
                 target_mode_int = int(target_mode)
-            except (TypeError, ValueError):
+            except TypeError, ValueError:
                 target_mode_int = None
 
         if target_mode_int is not None:
