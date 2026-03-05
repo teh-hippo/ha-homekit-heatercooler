@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v1.2.3 (2026-03-05)
+
+### Bug Fixes
+
+- Scope major-update label creation to repository
+  ([`4e89eb3`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/4e89eb318e350561fdffb5d34d0e4219ad4e9394))
+
+
 ## v1.2.2 (2026-03-05)
 
 ### Bug Fixes
