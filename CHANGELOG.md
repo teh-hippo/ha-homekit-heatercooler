@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v1.2.0 (2026-03-05)
+
+### Features
+
+- Add HomeKit brand overlay and Python 3.14 support
+  ([`218cfb9`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/218cfb9efd1c11e0fbe8808dfcd947ba4655b7b2))
+
+
 ## v1.1.9 (2026-03-01)
 
 ### Bug Fixes
