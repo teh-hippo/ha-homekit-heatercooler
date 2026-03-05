@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v1.2.1 (2026-03-05)
+
+### Bug Fixes
+
+- Correct Copilot reviewer login
+  ([`6ab4c97`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/6ab4c97d30d040badac8fc9cb9284e733ffc1512))
+
+
 ## v1.2.0 (2026-03-05)
 
 ### Features
