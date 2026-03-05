@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v1.2.2 (2026-03-05)
+
+### Bug Fixes
+
+- Bootstrap major-update label in dependabot workflow
+  ([`b093bbf`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/b093bbf169be87a997c724c014ee93561b6f51de))
+
+
 ## v1.2.1 (2026-03-05)
 
 ### Bug Fixes
