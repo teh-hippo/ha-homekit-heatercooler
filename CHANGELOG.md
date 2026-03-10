@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v1.2.8 (2026-03-10)
+
+### Bug Fixes
+
+- Exit 1 on real CI failures, exit 0 on pending checks
+  ([`71bbb4d`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/71bbb4d9d590da6131dc245ed832d7008eb5a9c8))
+
+
 ## v1.2.7 (2026-03-10)
 
 ### Bug Fixes
