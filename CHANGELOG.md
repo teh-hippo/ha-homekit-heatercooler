@@ -1,6 +1,24 @@
 # CHANGELOG
 
 
+## v1.2.6 (2026-03-10)
+
+### Bug Fixes
+
+- Align hacs.json and license format with other HA repos
+  ([`67c82ce`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/67c82ce97cdcc5d4301b26145388f9f28749b567))
+
+### Build System
+
+- **deps-dev**: Bump ruff in the python-deps group
+  ([`b7c4873`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/b7c4873774b9ed3d6460730defe3e1d6e570fffb))
+
+### Continuous Integration
+
+- Replace Copilot-gated auto-merge with fastify action
+  ([`9d58480`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/9d584803447f083d9850f4e6777ff68c832ddd81))
+
+
 ## v1.2.5 (2026-03-05)
 
 ### Build System
