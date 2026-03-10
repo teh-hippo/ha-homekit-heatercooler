@@ -1,6 +1,24 @@
 # CHANGELOG
 
 
+## v1.2.7 (2026-03-10)
+
+### Bug Fixes
+
+- Auto-merge exits cleanly when checks still running
+  ([`9d5a7bc`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/9d5a7bc4792ca63ba86f5d40d86f6416fb5a9b95))
+
+### Chores
+
+- **deps**: Weekly lockfile update
+  ([`998b640`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/998b6407beb55271f77446955eef21104fa44e40))
+
+### Continuous Integration
+
+- Replace dependabot-automerge with smart auto-merge
+  ([`5fb449c`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/5fb449c177b029068ac078ffc7fd4c03c4cb54ea))
+
+
 ## v1.2.6 (2026-03-10)
 
 ### Bug Fixes
