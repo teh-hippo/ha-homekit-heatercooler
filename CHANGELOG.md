@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v1.2.9 (2026-03-11)
+
+### Build System
+
+- **deps**: Bump peter-evans/create-pull-request from 7 to 8
+  ([`d6637d0`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/d6637d02a7837262901ab58355fccbddb9297539))
+
+### Chores
+
+- **deps**: Weekly lockfile update
+  ([`518b44d`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/518b44de77afc4e50732a3925526f2fbde45c515))
+
+
 ## v1.2.8 (2026-03-10)
 
 ### Bug Fixes
