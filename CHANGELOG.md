@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v1.2.10 (2026-03-12)
+
+### Build System
+
+- Tighten requires-python to >=3.14.2 for HA 2026.3.1 compatibility
+  ([`dae0e23`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/dae0e239b7202bdeb29b8a81fc978a6f380f30ac))
+
+### Chores
+
+- **deps**: Weekly lockfile update
+  ([`e021a54`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/e021a54a26ffb39832b8600b83ad079ee75a1689))
+
+
 ## v1.2.9 (2026-03-11)
 
 ### Build System
