@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v1.2.11 (2026-03-13)
+
+### Build System
+
+- **deps-dev**: Bump ruff in the python-deps group
+  ([`7998663`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/799866394e4632efa137bf65023fe33bb92d015d))
+
+### Chores
+
+- **deps**: Weekly lockfile update
+  ([`defba57`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/defba57a300dd3c37eab73557f19118eaf7c9dc2))
+
+
 ## v1.2.10 (2026-03-12)
 
 ### Build System
