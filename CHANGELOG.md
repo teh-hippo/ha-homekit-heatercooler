@@ -1,6 +1,44 @@
 # CHANGELOG
 
 
+## v1.2.12 (2026-03-23)
+
+### Bug Fixes
+
+- **ci**: Pass RELEASE_TOKEN to checkout for git push auth
+  ([`f201415`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/f2014153b06dc45f468d71b14b7735b9bee5e7cd))
+
+- **ci**: Use RELEASE_TOKEN for semantic-release push
+  ([`87780d6`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/87780d6049c2a930208d05bbe92de1a1ca0ce674))
+
+### Build System
+
+- **deps-dev**: Bump ruff in the python-deps group
+  ([`2ee868f`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/2ee868f2c09b69aef2cd93136e2c0abdfc35eae7))
+
+### Chores
+
+- **deps**: Weekly lockfile update
+  ([`f19479d`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/f19479dd427f7c86d9b1643e2d93e1750fdf7489))
+
+### Continuous Integration
+
+- Fix automerge config for all update types
+  ([`93cb5ae`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/93cb5aea1ecb015f3a033787a1ba18aa3dc7e156))
+
+- Fix build_command, remove lockfile-update workflow
+  ([`0d89da2`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/0d89da2c2759bd8dd09e24f780a8c2de65845cde))
+
+- Migrate from Dependabot to Renovate
+  ([`687ef3d`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/687ef3d248516c3f8a6c6fb16f3519944ebe90eb))
+
+- Standardise renovate.json with forkProcessing
+  ([`7524b6e`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/7524b6eca23f5733685a9aa88334e3e52f4262f7))
+
+- Stop cascade of lockfile/release chore commits
+  ([`4ee32d1`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/4ee32d197720f241fdad99c8f891394ad9c1af63))
+
+
 ## v1.2.11 (2026-03-13)
 
 ### Build System
