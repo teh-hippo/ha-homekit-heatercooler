@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v1.2.13 (2026-03-26)
+
+### Build System
+
+- **deps**: Upgrade
+  ([`1067208`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/106720805eeb6d1a0140b1a2036a19431fe2011e))
+
+### Continuous Integration
+
+- Enable global automerge and fix semantic-release patch_tags
+  ([`2b797b1`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/2b797b160f31c1a8eaf6ab48f7c1d139e35d57f5))
+
+
 ## v1.2.12 (2026-03-23)
 
 ### Bug Fixes
