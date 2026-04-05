@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v1.2.18 (2026-04-05)
+
+### Build System
+
+- Update Renovate config for weekly grouped updates
+  ([`e18f038`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/e18f038331e290231eade7d53dd2c06e796ca668))
+
+
 ## v1.2.17 (2026-03-30)
 
 ### Build System
