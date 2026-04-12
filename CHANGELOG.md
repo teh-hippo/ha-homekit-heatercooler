@@ -1,6 +1,17 @@
 # CHANGELOG
 
 
+## v1.2.21 (2026-04-12)
+
+### Build System
+
+- **deps**: Update softprops/action-gh-release action to v3
+  ([`c69f80a`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/c69f80a59628f42f3cd19003955dd243984896ff))
+
+- **deps**: Upgrade
+  ([`afebc4a`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/afebc4a79b41ec334d349c189c203e648d11acf2))
+
+
 ## v1.2.20 (2026-04-05)
 
 ### Build System
