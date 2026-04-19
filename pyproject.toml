@@ -1,6 +1,6 @@
 [project]
 name = "ha-homekit-heatercooler"
-version = "1.2.27"
+version = "1.2.28"
 description = "Home Assistant custom integration to expose selected climate entities as HomeKit HeaterCooler"
 readme = "README.md"
 license = "MIT"
