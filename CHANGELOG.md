@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v1.2.32 (2026-04-26)
+
+### Build System
+
+- **deps**: Upgrade
+  ([`67aea7a`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/67aea7ad35600dc651f84c30410eecd93ce5349d))
+
+
 ## v1.2.31 (2026-04-26)
 
 ### Build System
