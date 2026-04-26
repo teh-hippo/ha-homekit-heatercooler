@@ -1,6 +1,17 @@
 # CHANGELOG
 
 
+## v1.2.30 (2026-04-26)
+
+### Build System
+
+- **deps**: Update astral-sh/setup-uv action to v8
+  ([`9a16e1a`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/9a16e1a3caefceebecc2eba90f045fef057793e8))
+
+- **deps**: Upgrade
+  ([`ee4fee8`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/ee4fee8aadd5e6e9cf15630a8011cad56fbdd190))
+
+
 ## v1.2.29 (2026-04-19)
 
 ### Build System
