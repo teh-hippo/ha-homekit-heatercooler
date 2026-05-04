@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v1.2.36 (2026-05-04)
+
+### Build System
+
+- **renovate**: Group and auto-merge major updates
+  ([`e6b74fa`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/e6b74fa5a5177e8cd898b6eb6ec5998f92b0c988))
+
+
 ## v1.2.35 (2026-05-03)
 
 ### Build System
