@@ -10,6 +10,7 @@
   "schedule": [
     "before 7am on Monday"
   ],
+  "pinDigests": true,
   "automerge": true,
   "platformAutomerge": true,
   "lockFileMaintenance": {
