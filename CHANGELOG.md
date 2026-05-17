@@ -1,6 +1,22 @@
 # CHANGELOG
 
 
+## v1.2.39 (2026-05-17)
+
+### Build System
+
+- **deps**: Pin dependencies
+  ([`6debc11`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/6debc11e675d5bf99e38259aa603c41a9bd90538))
+
+- **deps**: Upgrade
+  ([`260d982`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/260d98241fbba9cf6cec99708ab3331aeb59c1b9))
+
+### Continuous Integration
+
+- Stagger cron and pin floating action refs
+  ([`a8863ba`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/a8863ba6d282d75aaa03999ae19f3e12abc2d0a8))
+
+
 ## v1.2.38 (2026-05-10)
 
 ### Build System
