@@ -1,6 +1,17 @@
 # CHANGELOG
 
 
+## v1.2.42 (2026-05-24)
+
+### Build System
+
+- **deps**: Update github/codeql-action digest to 7211b7c
+  ([`e8a1f80`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/e8a1f80432308f97c2e3b4f7e5bbe0ba1ac87b10))
+
+- **deps**: Upgrade
+  ([`443f6c3`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/443f6c3baa6e4e4d6c3a70d83a0de78fe49aea6d))
+
+
 ## v1.2.41 (2026-05-17)
 
 ### Build System
