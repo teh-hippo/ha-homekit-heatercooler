@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v1.2.45 (2026-05-26)
+
+### Build System
+
+- **deps**: Adopt shared Renovate preset
+  ([`e966ebb`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/e966ebb1f05a2cfab39c59abc0cc4cb86a41fcc2))
+
+
 ## v1.2.44 (2026-05-24)
 
 ### Build System
