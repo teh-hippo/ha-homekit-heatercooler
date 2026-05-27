@@ -4,14 +4,16 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 echo "=== Lint ==="
-uv run ruff check .
-uv run ruff format --check .
+uv sync --locked
+
+uv run --no-sync ruff check .
+uv run --no-sync ruff format --check .
 
 echo "=== Mypy ==="
-uv run mypy --ignore-missing-imports custom_components/homekit_heatercooler
+uv run --no-sync mypy --ignore-missing-imports custom_components/homekit_heatercooler
 
 echo "=== Smoke ==="
-uv run python -m compileall custom_components
+uv run --no-sync python -m compileall custom_components
 
 echo ""
 echo "✅ All checks passed — safe to push."
