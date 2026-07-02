@@ -6,7 +6,8 @@
         "description": "Choose which climate entities should be exposed as HeaterCooler in Apple Home.",
         "data": {
           "include_entities": "Include entities",
-          "exclude_entities": "Exclude entities"
+          "exclude_entities": "Exclude entities",
+          "fan_lane": "Fan slider mode"
         }
       }
     },
@@ -21,8 +22,17 @@
         "description": "Update which climate entities are exposed as HeaterCooler in Apple Home.",
         "data": {
           "include_entities": "Include entities",
-          "exclude_entities": "Exclude entities"
+          "exclude_entities": "Exclude entities",
+          "fan_lane": "Fan slider mode"
         }
+      }
+    }
+  },
+  "selector": {
+    "fan_lane": {
+      "options": {
+        "auto": "Auto - Low/Auto, Mid/Auto, High/Auto",
+        "manual": "Manual - Low, Mid, High"
       }
     }
   }

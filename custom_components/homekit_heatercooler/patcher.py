@@ -18,7 +18,7 @@ from homeassistant.components.homekit import accessories as homekit_accessories
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME
 from homeassistant.core import HomeAssistant, State
 
-from .const import DATA_PATCH_STATE, DOMAIN
+from .const import CONF_FAN_LANE, DATA_PATCH_STATE, DEFAULT_FAN_LANE, DOMAIN
 from .type_heatercooler import register_heatercooler_type
 
 _LOGGER = logging.getLogger(__name__)
@@ -37,6 +37,7 @@ class PatchState:
 
     include_entities: set[str]
     exclude_entities: set[str]
+    fan_lane: str
     original_get_accessory: GetAccessory
     original_homekit_get_accessory: GetAccessory
 
@@ -62,7 +63,12 @@ def _get_accessory_params(func: Callable[..., Any]) -> tuple[str, ...]:
         return ()
 
 
-def apply_patch(hass: HomeAssistant, include_entities: set[str], exclude_entities: set[str]) -> None:
+def apply_patch(
+    hass: HomeAssistant,
+    include_entities: set[str],
+    exclude_entities: set[str],
+    fan_lane: str = DEFAULT_FAN_LANE,
+) -> None:
     """Patch HomeKit get_accessory to expose selected climates as HeaterCooler."""
     register_heatercooler_type()
     if "HeaterCooler" not in homekit_accessories.TYPES:
@@ -74,6 +80,7 @@ def apply_patch(hass: HomeAssistant, include_entities: set[str], exclude_entitie
     if patch_state:
         patch_state.include_entities = include_entities
         patch_state.exclude_entities = exclude_entities
+        patch_state.fan_lane = fan_lane
         return
 
     original_get_accessory = homekit_accessories.get_accessory
@@ -89,6 +96,7 @@ def apply_patch(hass: HomeAssistant, include_entities: set[str], exclude_entitie
     patch_state = PatchState(
         include_entities=include_entities,
         exclude_entities=exclude_entities,
+        fan_lane=fan_lane,
         original_get_accessory=original_get_accessory,
         original_homekit_get_accessory=original_homekit_get_accessory,
     )
@@ -113,7 +121,8 @@ def apply_patch(hass: HomeAssistant, include_entities: set[str], exclude_entitie
                 and supports_heatercooler(state)
             ):
                 name = config.get(CONF_NAME, state.name)
-                return homekit_accessories.TYPES["HeaterCooler"](hass, driver, name, state.entity_id, aid, config)
+                hc_config = {**config, CONF_FAN_LANE: patch_state.fan_lane}
+                return homekit_accessories.TYPES["HeaterCooler"](hass, driver, name, state.entity_id, aid, hc_config)
         except Exception:
             _LOGGER.exception(
                 "HeaterCooler mapping failed for %s; falling back to the default accessory",

@@ -17,12 +17,17 @@ from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    CONF_FAN_LANE,
     DATA_PATCH_STATE,
     DATA_PATCH_STATUS,
     DATA_PATCH_STATUS_UNSUB,
     DATA_YAML_EXCLUDE_ENTITIES,
+    DATA_YAML_FAN_LANE,
     DATA_YAML_INCLUDE_ENTITIES,
+    DEFAULT_FAN_LANE,
     DOMAIN,
+    FAN_LANE_AUTO,
+    FAN_LANE_MANUAL,
     PLATFORMS,
     SIGNAL_PATCH_STATUS_UPDATED,
 )
@@ -36,6 +41,7 @@ CONFIG_SCHEMA = vol.Schema(
             {
                 vol.Optional(CONF_INCLUDE_ENTITIES, default=[]): vol.All(cv.ensure_list, [cv.entity_id]),
                 vol.Optional(CONF_EXCLUDE_ENTITIES, default=[]): vol.All(cv.ensure_list, [cv.entity_id]),
+                vol.Optional(CONF_FAN_LANE, default=DEFAULT_FAN_LANE): vol.In([FAN_LANE_AUTO, FAN_LANE_MANUAL]),
             }
         )
     },
@@ -49,6 +55,7 @@ async def async_setup(hass: HomeAssistant, config: Mapping[str, Any]) -> bool:
     domain_data = _domain_data(hass)
     domain_data[DATA_YAML_INCLUDE_ENTITIES] = include_entities
     domain_data[DATA_YAML_EXCLUDE_ENTITIES] = exclude_entities
+    domain_data[DATA_YAML_FAN_LANE] = _yaml_fan_lane_from_config(config)
     _refresh_patch(hass)
     return True
 
@@ -84,6 +91,19 @@ def _yaml_entities_from_config(config: Mapping[str, Any]) -> tuple[set[str], set
     return include_entities, exclude_entities
 
 
+def _yaml_fan_lane_from_config(config: Mapping[str, Any]) -> str:
+    """Extract the fan lane from YAML config, defaulting to the standard lane."""
+    integration_config = config.get(DOMAIN)
+    if isinstance(integration_config, Mapping):
+        return _valid_fan_lane(integration_config.get(CONF_FAN_LANE))
+    return DEFAULT_FAN_LANE
+
+
+def _valid_fan_lane(value: Any) -> str:
+    """Return a recognised fan lane or the default."""
+    return value if value in (FAN_LANE_AUTO, FAN_LANE_MANUAL) else DEFAULT_FAN_LANE
+
+
 def _entry_entities(entry: ConfigEntry) -> tuple[set[str], set[str]]:
     """Extract include/exclude entity IDs from a config entry."""
     source = entry.options or entry.data
@@ -114,7 +134,7 @@ def _refresh_patch(hass: HomeAssistant, ignore_entry: ConfigEntry | None = None)
     domain_data = _domain_data(hass)
     include_entities, exclude_entities = _combined_entities(hass, ignore_entry)
     if include_entities:
-        apply_patch(hass, include_entities, exclude_entities)
+        apply_patch(hass, include_entities, exclude_entities, _combined_fan_lane(hass, ignore_entry))
     else:
         remove_patch(hass)
     _register_patch_status_refresh(hass, include_entities, exclude_entities)
@@ -142,6 +162,18 @@ def _combined_entities(hass: HomeAssistant, ignore_entry: ConfigEntry | None = N
         exclude_entities.update(entry_exclude_entities)
 
     return include_entities, exclude_entities
+
+
+def _combined_fan_lane(hass: HomeAssistant, ignore_entry: ConfigEntry | None = None) -> str:
+    """Resolve the single, bridge-wide fan lane from YAML and config entries (last entry wins)."""
+    fan_lane = _valid_fan_lane(_domain_data(hass).get(DATA_YAML_FAN_LANE))
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if ignore_entry is not None and entry.entry_id == ignore_entry.entry_id:
+            continue
+        source = entry.options or entry.data
+        if CONF_FAN_LANE in source:
+            fan_lane = _valid_fan_lane(source.get(CONF_FAN_LANE))
+    return fan_lane
 
 
 def _register_patch_status_refresh(

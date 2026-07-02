@@ -19,10 +19,10 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_SUPPORTED_FEATURES
 from homeassistant.core import HomeAssistant
 
+from custom_components.homekit_heatercooler.climate_util import HC_COOLING
 from custom_components.homekit_heatercooler.type_heatercooler import (
     CHAR_ACTIVE,
     CHAR_COOLING_THRESHOLD_TEMPERATURE,
-    HC_COOLING,
     HeaterCooler,
 )
 from tests.common import ENTITY_ID, set_climate

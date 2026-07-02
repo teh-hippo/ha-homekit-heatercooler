@@ -7,6 +7,7 @@ from unittest.mock import patch
 import pytest
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
+    ATTR_FAN_MODES,
     ATTR_HVAC_MODES,
     SERVICE_SET_FAN_MODE,
     HVACMode,
@@ -17,22 +18,25 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
-from custom_components.homekit_heatercooler.type_heatercooler import (
+from custom_components.homekit_heatercooler.climate_util import (
     HC_INACTIVE,
-    HeaterCooler,
-    _as_float,
+    as_float,
     build_target_state_map,
     target_state_valid_values,
 )
+from custom_components.homekit_heatercooler.const import CONF_FAN_LANE, FAN_LANE_AUTO, FAN_LANE_MANUAL
+from custom_components.homekit_heatercooler.type_heatercooler import HeaterCooler
 from tests.common import set_climate as _set_climate
+
+SEVEN_FAN_MODES = ["Auto", "Low", "Mid", "High", "Low/Auto", "Mid/Auto", "High/Auto"]
 
 
 def test_as_float() -> None:
-    assert _as_float(3) == 3.0
-    assert _as_float(3.5) == 3.5
-    assert _as_float(True) == 1.0
-    assert _as_float(None) is None
-    assert _as_float("nope") is None
+    assert as_float(3) == 3.0
+    assert as_float(3.5) == 3.5
+    assert as_float(True) == 1.0
+    assert as_float(None) is None
+    assert as_float("nope") is None
 
 
 def test_target_state_map_omits_auto_when_unsupported() -> None:
@@ -92,3 +96,25 @@ async def test_lowest_fan_step_reaches_first_mode(hass: HomeAssistant, hk_driver
         SERVICE_SET_FAN_MODE,
         {ATTR_ENTITY_ID: "climate.test", ATTR_FAN_MODE: "Auto"},
     )
+
+
+async def test_fan_lane_auto_uses_auto_trio(hass: HomeAssistant, hk_driver: object) -> None:
+    """The auto lane maps the slider to the three /Auto fan modes."""
+    _set_climate(
+        hass,
+        HVACMode.COOL,
+        **{ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF], ATTR_FAN_MODES: SEVEN_FAN_MODES},
+    )
+    acc = HeaterCooler(hass, hk_driver, "Test", "climate.test", 2, {CONF_FAN_LANE: FAN_LANE_AUTO})
+    assert acc.ordered_fan_speeds == ["low/auto", "mid/auto", "high/auto"]
+
+
+async def test_fan_lane_manual_uses_manual_trio(hass: HomeAssistant, hk_driver: object) -> None:
+    """The manual lane maps the slider to Low/Mid/High."""
+    _set_climate(
+        hass,
+        HVACMode.COOL,
+        **{ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF], ATTR_FAN_MODES: SEVEN_FAN_MODES},
+    )
+    acc = HeaterCooler(hass, hk_driver, "Test", "climate.test", 2, {CONF_FAN_LANE: FAN_LANE_MANUAL})
+    assert acc.ordered_fan_speeds == ["low", "mid", "high"]

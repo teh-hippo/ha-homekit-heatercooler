@@ -45,11 +45,21 @@ No `configuration.yaml` changes are required.
 2. Search for **HomeKit HeaterCooler Bridge**
 3. Select one or more `climate` entities in **Include entities**
 4. Optionally set **Exclude entities**
-5. Save
+5. Choose the **Fan slider mode** (see below)
+6. Save
 
 You can change these later from **Settings → Devices & Services → HomeKit HeaterCooler Bridge → Configure**.
 
 To confirm the override is active, open the integration device page and check the **Patched entities** diagnostic sensor.
+
+### Fan slider mode
+
+HomeKit's HeaterCooler tile has a single linear fan slider, so this integration maps it to three speeds. **Fan slider mode** chooses which of the entity's fan modes those three positions drive:
+
+- **Auto** (default): the auto-referenced speeds when the entity exposes them (for example a Daikin's `Low/Auto`, `Mid/Auto`, `High/Auto`).
+- **Manual**: the fixed speeds (for example `Low`, `Mid`, `High`).
+
+If the entity has no fan modes matching the chosen mode, its own fan modes are used as-is. Fan modes outside the chosen mode stay available from the underlying `climate` entity.
 
 ## How this patch works
 
