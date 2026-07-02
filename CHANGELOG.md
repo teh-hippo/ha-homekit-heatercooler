@@ -1,6 +1,57 @@
 # CHANGELOG
 
 
+## v1.2.46 (2026-07-02)
+
+### Bug Fixes
+
+- Harden HomeKit patch and correct HeaterCooler mapping
+  ([`98c55ad`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/98c55adbf76d5b523f2b452cf17a5ca2ccf00a3c))
+
+### Chores
+
+- **deps**: Lock file maintenance
+  ([`1bd3eba`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/1bd3ebafbad84e4eb388352b891a6620e5909c9b))
+
+- **deps**: Lock file maintenance
+  ([`011299a`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/011299a16f37ea13e9827b379b7dada709525f49))
+
+- **deps**: Lock file maintenance
+  ([`6034f96`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/6034f96dfd2d61c1c6b7af27a4b55a1add15154d))
+
+- **deps**: Lock file maintenance
+  ([`b69c4cd`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/b69c4cd79f42ea4cbb53b5fc8d342eeb58effbd3))
+
+- **deps**: Update actions/checkout action to v7
+  ([`b0d5770`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/b0d5770a9f78b775119506bbe4b903f522f54b8a))
+
+- **deps**: Update actions/checkout digest to df4cb1c
+  ([`d743e4e`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/d743e4ec55d549adea7fc282ccbccfa6ec0f09f4))
+
+- **deps**: Update astral-sh/setup-uv action to v8.2.0
+  ([`db68d9e`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/db68d9ee70669f10916d3f803ff8e6751115fe36))
+
+- **deps**: Update softprops/action-gh-release digest to 718ea10
+  ([`b7d64ca`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/b7d64caeb0aede2cc8a23ace80fd68d744f15b75))
+
+- **deps**: Update teh-hippo/common-repo-configs digest to b3d0a78
+  ([`e30d40e`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/e30d40eaa533c90efc303568864fa5ae310328e7))
+
+### Continuous Integration
+
+- Adopt shared CodeQL workflow
+  ([`70b6c17`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/70b6c173a119a2ebab3b179502d553a7ee037fa0))
+
+- Adopt uv sync --locked pattern
+  ([`dadfc78`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/dadfc784d360af197cdde23aedf40552f6699da9))
+
+- **release**: Commit uv.lock from build_command via assets
+  ([`e1be5a0`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/e1be5a048a19863335f687ad67e926a8c135582e))
+
+- **validate**: Drop daily cron and Dependabot/Copilot branch push triggers
+  ([`1f96454`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/1f96454c844b67c43142a1aa6d934c695d6bd65f))
+
+
 ## v1.2.45 (2026-05-26)
 
 ### Build System
