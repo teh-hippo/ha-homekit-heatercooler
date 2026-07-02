@@ -9,7 +9,7 @@ from typing import Any
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
-from homeassistant.core import Event, HomeAssistant, callback
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
 from homeassistant.helpers.entityfilter import CONF_EXCLUDE_ENTITIES, CONF_INCLUDE_ENTITIES
@@ -26,7 +26,7 @@ from .const import (
     PLATFORMS,
     SIGNAL_PATCH_STATUS_UPDATED,
 )
-from .patcher import apply_patch, supports_heatercooler
+from .patcher import apply_patch, remove_patch, supports_heatercooler
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -64,7 +64,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Unload a HomeKit HeaterCooler config entry."""
     unloaded = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-    _refresh_patch(hass)
+    _refresh_patch(hass, ignore_entry=entry if unloaded else None)
     return bool(unloaded)
 
 
@@ -109,11 +109,14 @@ def _domain_data(hass: HomeAssistant) -> dict[str, Any]:
     return domain_data
 
 
-def _refresh_patch(hass: HomeAssistant) -> None:
+def _refresh_patch(hass: HomeAssistant, ignore_entry: ConfigEntry | None = None) -> None:
     """Apply patch with merged YAML and UI-configured entities."""
     domain_data = _domain_data(hass)
-    include_entities, exclude_entities = _combined_entities(hass)
-    apply_patch(hass, include_entities, exclude_entities)
+    include_entities, exclude_entities = _combined_entities(hass, ignore_entry)
+    if include_entities:
+        apply_patch(hass, include_entities, exclude_entities)
+    else:
+        remove_patch(hass)
     _register_patch_status_refresh(hass, include_entities, exclude_entities)
     _update_patch_status(hass, include_entities, exclude_entities)
     patch_status = domain_data[DATA_PATCH_STATUS]
@@ -125,13 +128,15 @@ def _refresh_patch(hass: HomeAssistant) -> None:
     )
 
 
-def _combined_entities(hass: HomeAssistant) -> tuple[set[str], set[str]]:
+def _combined_entities(hass: HomeAssistant, ignore_entry: ConfigEntry | None = None) -> tuple[set[str], set[str]]:
     """Collect include/exclude entities from YAML and config entries."""
     domain_data = _domain_data(hass)
     include_entities = _entity_set(domain_data.get(DATA_YAML_INCLUDE_ENTITIES))
     exclude_entities = _entity_set(domain_data.get(DATA_YAML_EXCLUDE_ENTITIES))
 
     for entry in hass.config_entries.async_entries(DOMAIN):
+        if ignore_entry is not None and entry.entry_id == ignore_entry.entry_id:
+            continue
         entry_include_entities, entry_exclude_entities = _entry_entities(entry)
         include_entities.update(entry_include_entities)
         exclude_entities.update(entry_exclude_entities)
@@ -152,8 +157,8 @@ def _register_patch_status_refresh(
 
     target_entities = sorted(include_entities - exclude_entities)
 
-    @callback  # type: ignore[untyped-decorator]
-    def _handle_status_refresh(_: Event | None = None) -> None:
+    @callback
+    def _handle_status_refresh(_event: Any = None) -> None:
         current_include_entities, current_exclude_entities = _combined_entities(hass)
         _update_patch_status(hass, current_include_entities, current_exclude_entities)
 
@@ -224,7 +229,7 @@ def _build_patch_status(
     hook_installed = bool(_domain_data(hass).get(DATA_PATCH_STATE))
 
     return {
-        "patch_active": bool(patched_entities),
+        "patch_active": hook_installed and bool(patched_entities),
         "hook_installed": hook_installed,
         "include_entities": sorted(include_entities),
         "exclude_entities": sorted(exclude_entities),

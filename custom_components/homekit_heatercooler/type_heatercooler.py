@@ -18,6 +18,7 @@ from homeassistant.components.climate import (
     ATTR_SWING_MODES,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    ATTR_TARGET_TEMP_STEP,
     ATTR_TEMPERATURE,
     FAN_HIGH,
     FAN_LOW,
@@ -44,7 +45,6 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import State
-from homeassistant.exceptions import ServiceNotFound, ServiceValidationError
 from homeassistant.util.enum import try_parse_enum
 from homeassistant.util.percentage import (
     ordered_list_item_to_percentage,
@@ -111,12 +111,9 @@ SWING_ON_SET = {"on", "both", "horizontal", "vertical"}
 
 def _as_float(value: Any) -> float | None:
     """Convert HomeKit characteristic values to float where possible."""
-    if value is None:
-        return None
-    try:
+    if isinstance(value, (int, float)):
         return float(value)
-    except TypeError, ValueError:
-        return None
+    return None
 
 
 def _temp(state: State, key: str, unit: str) -> float | None:
@@ -127,7 +124,30 @@ def _temp(state: State, key: str, unit: str) -> float | None:
     return float(temperature_to_homekit(value, unit))
 
 
-class HeaterCooler(HomeAccessory):  # type: ignore[misc]
+def build_target_state_map(supports_auto: bool, supports_heat_cool: bool) -> dict[int, HVACMode]:
+    """Map HomeKit HeaterCooler target states to Home Assistant HVAC modes.
+
+    Auto is only offered when the entity supports AUTO or HEAT_COOL, so HomeKit
+    never presents a target the entity cannot honour.
+    """
+    target_map = dict(HC_HOMEKIT_TO_HASS_TARGET_BASE)
+    if supports_auto:
+        target_map[HC_TARGET_AUTO] = HVACMode.AUTO
+    elif supports_heat_cool:
+        target_map[HC_TARGET_AUTO] = HVACMode.HEAT_COOL
+    return target_map
+
+
+def target_state_valid_values(target_map: dict[int, HVACMode]) -> dict[str, int]:
+    """Return the HomeKit valid_values for TargetHeaterCoolerState."""
+    return {
+        name: value
+        for name, value in (("Auto", HC_TARGET_AUTO), ("Heat", HC_TARGET_HEAT), ("Cool", HC_TARGET_COOL))
+        if value in target_map
+    }
+
+
+class HeaterCooler(HomeAccessory):
     """Expose a climate entity as a native HomeKit HeaterCooler."""
 
     def __init__(self, *args: Any) -> None:
@@ -150,19 +170,10 @@ class HeaterCooler(HomeAccessory):  # type: ignore[misc]
         elif current_mode == HVACMode.HEAT_COOL:
             supports_heat_cool = True
 
-        self._hk_to_ha_target = HC_HOMEKIT_TO_HASS_TARGET_BASE.copy()
-        if supports_auto:
-            self._hk_to_ha_target[HC_TARGET_AUTO] = HVACMode.AUTO
-        elif supports_heat_cool:
-            self._hk_to_ha_target[HC_TARGET_AUTO] = HVACMode.HEAT_COOL
-        else:
-            self._hk_to_ha_target[HC_TARGET_AUTO] = HVACMode.HEAT_COOL
+        self._hk_to_ha_target = build_target_state_map(supports_auto, supports_heat_cool)
 
-        raw_step = attributes.get("temperature_step", 1)
-        try:
-            self._step = float(raw_step)
-        except TypeError, ValueError:
-            self._step = 1.0
+        raw_step = attributes.get(ATTR_TARGET_TEMP_STEP, 1)
+        self._step = float(raw_step) if isinstance(raw_step, (int, float)) else 1.0
 
         chars = [
             CHAR_ACTIVE,
@@ -182,7 +193,15 @@ class HeaterCooler(HomeAccessory):  # type: ignore[misc]
 
         self.char_active = service.configure_char(CHAR_ACTIVE, value=0)
         self.char_current_state = service.configure_char(CHAR_CURRENT_HEATER_COOLER_STATE, value=HC_INACTIVE)
-        self.char_target_state = service.configure_char(CHAR_TARGET_HEATER_COOLER_STATE, value=HC_TARGET_AUTO)
+        target_valid_values = target_state_valid_values(self._hk_to_ha_target)
+        initial_target = (
+            HC_TARGET_AUTO if HC_TARGET_AUTO in self._hk_to_ha_target else min(target_valid_values.values())
+        )
+        self.char_target_state = service.configure_char(
+            CHAR_TARGET_HEATER_COOLER_STATE,
+            value=initial_target,
+            valid_values=target_valid_values,
+        )
         self.char_current_temp = service.configure_char(CHAR_CURRENT_TEMPERATURE, value=21.0)
 
         min_temp_c = attributes.get(ATTR_MIN_TEMP, 7.0)
@@ -228,7 +247,9 @@ class HeaterCooler(HomeAccessory):  # type: ignore[misc]
             )
             self.char_swing = service.configure_char(CHAR_SWING_MODE, value=0)
 
-        self._last_known_mode = current_mode or HVACMode.COOL
+        self._last_known_mode: HVACMode = (
+            current_mode if current_mode and current_mode != HVACMode.OFF else HVACMode.COOL
+        )
         self.async_update_state(state)
         service.setter_callback = self._set_chars
 
@@ -240,14 +261,11 @@ class HeaterCooler(HomeAccessory):  # type: ignore[misc]
         self._handle_fan_swing_changes(char_values)
 
         for service_name, service_data in service_calls:
-            try:
-                self.async_call_service(
-                    DOMAIN_CLIMATE,
-                    service_name,
-                    {ATTR_ENTITY_ID: self.entity_id, **service_data},
-                )
-            except (ServiceNotFound, ServiceValidationError) as err:
-                _LOGGER.error("Failed to execute %s for %s: %s", service_name, self.entity_id, err)
+            self.async_call_service(
+                DOMAIN_CLIMATE,
+                service_name,
+                {ATTR_ENTITY_ID: self.entity_id, **service_data},
+            )
 
     def _handle_active_mode_changes(
         self,
@@ -272,12 +290,7 @@ class HeaterCooler(HomeAccessory):  # type: ignore[misc]
             service_calls.append(("turn_off", {}))
             return
 
-        target_mode_int = None
-        if target_mode is not None:
-            try:
-                target_mode_int = int(target_mode)
-            except TypeError, ValueError:
-                target_mode_int = None
+        target_mode_int = int(target_mode) if isinstance(target_mode, (int, float)) else None
 
         if target_mode_int is not None:
             hass_mode = self._hk_to_ha_target.get(target_mode_int)
@@ -376,16 +389,14 @@ class HeaterCooler(HomeAccessory):  # type: ignore[misc]
         if speed_value is None or speed_value <= 0 or speed_value > 100:
             return
 
-        fan_mode = percentage_to_ordered_list_item(self.ordered_fan_speeds, speed_value)
+        fan_mode = percentage_to_ordered_list_item(self.ordered_fan_speeds, int(speed_value) - 1)
         fan_mode = self.fan_modes.get(fan_mode, fan_mode)
-        try:
-            self.async_call_service(
-                DOMAIN_CLIMATE,
-                SERVICE_SET_FAN_MODE,
-                {ATTR_ENTITY_ID: self.entity_id, ATTR_FAN_MODE: fan_mode},
-            )
-        except (ServiceNotFound, ServiceValidationError) as err:
-            _LOGGER.error("Failed to set fan mode for %s: %s", self.entity_id, err)
+        _LOGGER.debug("HeaterCooler %s fan speed %.2f%% -> %s", self.entity_id, speed_value, fan_mode)
+        self.async_call_service(
+            DOMAIN_CLIMATE,
+            SERVICE_SET_FAN_MODE,
+            {ATTR_ENTITY_ID: self.entity_id, ATTR_FAN_MODE: fan_mode},
+        )
 
     def _set_swing_mode(self, swing_on: Any) -> None:
         """Set swing mode through the climate service."""
@@ -412,14 +423,11 @@ class HeaterCooler(HomeAccessory):  # type: ignore[misc]
         if target_mode == current_swing:
             return
 
-        try:
-            self.async_call_service(
-                DOMAIN_CLIMATE,
-                SERVICE_SET_SWING_MODE,
-                {ATTR_ENTITY_ID: self.entity_id, ATTR_SWING_MODE: target_mode},
-            )
-        except (ServiceNotFound, ServiceValidationError) as err:
-            _LOGGER.error("Failed to set swing mode for %s: %s", self.entity_id, err)
+        self.async_call_service(
+            DOMAIN_CLIMATE,
+            SERVICE_SET_SWING_MODE,
+            {ATTR_ENTITY_ID: self.entity_id, ATTR_SWING_MODE: target_mode},
+        )
 
     def _hk_target_mode(self, state: State) -> int | None:
         """Map Home Assistant hvac_mode to HomeKit target mode."""
@@ -446,8 +454,11 @@ class HeaterCooler(HomeAccessory):  # type: ignore[misc]
         if (target_mode := self._hk_target_mode(new_state)) is not None:
             self.char_target_state.set_value(target_mode)
 
-        action = attributes.get(ATTR_HVAC_ACTION) or self._derive_action(new_state)
-        self.char_current_state.set_value(HC_HASS_TO_HOMEKIT_ACTION.get(action, HC_INACTIVE))
+        if action := attributes.get(ATTR_HVAC_ACTION):
+            self.char_current_state.set_value(HC_HASS_TO_HOMEKIT_ACTION.get(action, HC_INACTIVE))
+        else:
+            off = new_state.state in (HVACMode.OFF, STATE_UNAVAILABLE, STATE_UNKNOWN)
+            self.char_current_state.set_value(HC_INACTIVE if off else HC_IDLE)
         self.char_active.set_value(int(new_state.state not in (HVACMode.OFF, STATE_UNAVAILABLE, STATE_UNKNOWN)))
 
         if (current_temp := _temp(new_state, ATTR_CURRENT_TEMPERATURE, self._unit)) is not None:
@@ -490,30 +501,6 @@ class HeaterCooler(HomeAccessory):  # type: ignore[misc]
         if hasattr(self, "char_swing"):
             current_swing = str(attributes.get(ATTR_SWING_MODE, "")).lower()
             self.char_swing.set_value(1 if current_swing in SWING_ON_SET else 0)
-
-    def _derive_action(self, state: State) -> HVACAction:
-        """Derive hvac_action when an integration does not provide it."""
-        mode = try_parse_enum(HVACMode, state.state)
-        target = (
-            state.attributes.get(ATTR_TEMPERATURE)
-            or state.attributes.get(ATTR_TARGET_TEMP_HIGH)
-            or state.attributes.get(ATTR_TARGET_TEMP_LOW)
-        )
-        current = state.attributes.get(ATTR_CURRENT_TEMPERATURE)
-        if current is None or target is None or mode is None:
-            return HVACAction.IDLE
-
-        delta = 0.25
-        if mode == HVACMode.COOL:
-            return HVACAction.COOLING if current > target + delta else HVACAction.IDLE
-        if mode == HVACMode.HEAT:
-            return HVACAction.HEATING if current < target - delta else HVACAction.IDLE
-        if mode in (HVACMode.HEAT_COOL, HVACMode.AUTO):
-            if current > target + delta:
-                return HVACAction.COOLING
-            if current < target - delta:
-                return HVACAction.HEATING
-        return HVACAction.IDLE
 
 
 def register_heatercooler_type() -> None:

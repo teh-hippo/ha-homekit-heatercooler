@@ -23,7 +23,7 @@ async def async_setup_entry(
     async_add_entities([HomeKitHeaterCoolerPatchedEntitiesSensor(entry)])
 
 
-class HomeKitHeaterCoolerPatchedEntitiesSensor(SensorEntity):  # type: ignore[misc]
+class HomeKitHeaterCoolerPatchedEntitiesSensor(SensorEntity):
     """Show how many selected entities are currently patched."""
 
     _attr_has_entity_name = True
@@ -80,7 +80,7 @@ class HomeKitHeaterCoolerPatchedEntitiesSensor(SensorEntity):  # type: ignore[mi
             )
         )
 
-    @callback  # type: ignore[untyped-decorator]
+    @callback
     def _handle_patch_status_update(self) -> None:
         """Write updated patch status to Home Assistant state."""
         self.async_write_ha_state()

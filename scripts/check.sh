@@ -10,7 +10,11 @@ uv run --no-sync ruff check .
 uv run --no-sync ruff format --check .
 
 echo "=== Mypy ==="
-uv run --no-sync mypy --ignore-missing-imports custom_components/homekit_heatercooler
+uv run --no-sync mypy custom_components/homekit_heatercooler
+
+echo "=== Test ==="
+uv run --no-sync coverage run -m pytest tests/
+uv run --no-sync coverage report --include="custom_components/homekit_heatercooler/*" --fail-under=70
 
 echo "=== Smoke ==="
 uv run --no-sync python -m compileall custom_components

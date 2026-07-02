@@ -45,7 +45,7 @@ def _build_schema(include_entities: list[str], exclude_entities: list[str]) -> v
     )
 
 
-class HomeKitHeaterCoolerConfigFlow(ConfigFlow, domain=DOMAIN):  # type: ignore[misc, call-arg]
+class HomeKitHeaterCoolerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle config flow for HomeKit HeaterCooler Bridge."""
 
     VERSION = 1
@@ -69,7 +69,7 @@ class HomeKitHeaterCoolerConfigFlow(ConfigFlow, domain=DOMAIN):  # type: ignore[
         return HomeKitHeaterCoolerOptionsFlow()
 
 
-class HomeKitHeaterCoolerOptionsFlow(OptionsFlow):  # type: ignore[misc]
+class HomeKitHeaterCoolerOptionsFlow(OptionsFlow):
     """Handle HomeKit HeaterCooler Bridge options."""
 
     async def async_step_init(self, user_input: dict[str, Any] | None = None) -> Any:
