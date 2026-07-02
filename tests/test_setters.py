@@ -10,6 +10,8 @@ from homeassistant.components.climate import (
     ATTR_HVAC_MODES,
     ATTR_SWING_MODE,
     ATTR_SWING_MODES,
+    ATTR_TARGET_TEMP_HIGH,
+    ATTR_TARGET_TEMP_LOW,
     ATTR_TEMPERATURE,
     SERVICE_SET_TEMPERATURE,
     ClimateEntityFeature,
@@ -47,6 +49,25 @@ async def test_single_setpoint_temperature_write(hass: HomeAssistant, hk_driver:
         acc._set_chars({CHAR_COOLING_THRESHOLD_TEMPERATURE: 25.0})
     assert mock_call.called
     assert mock_call.call_args[0][1] == SERVICE_SET_TEMPERATURE
+
+
+async def test_dual_setpoint_write_sends_both_thresholds(hass: HomeAssistant, hk_driver: object) -> None:
+    # A range entity requires both thresholds together; a single write must still send both.
+    set_climate(
+        hass,
+        HVACMode.HEAT_COOL,
+        **{
+            ATTR_HVAC_MODES: [HVACMode.HEAT_COOL, HVACMode.OFF],
+            ATTR_TARGET_TEMP_HIGH: 26,
+            ATTR_TARGET_TEMP_LOW: 20,
+        },
+    )
+    acc = _accessory(hass, hk_driver)
+    with patch.object(acc, "async_call_service") as mock_call:
+        acc._set_chars({CHAR_COOLING_THRESHOLD_TEMPERATURE: 28.0})
+    data = mock_call.call_args[0][2]
+    assert data[ATTR_TARGET_TEMP_HIGH] == 28.0
+    assert data[ATTR_TARGET_TEMP_LOW] == 20.0
 
 
 async def test_update_state_reflects_cooling_action(hass: HomeAssistant, hk_driver: object) -> None:

@@ -12,6 +12,10 @@ from typing import Any
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
+    ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP,
+    DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_TEMP,
     FAN_HIGH,
     FAN_LOW,
     FAN_MEDIUM,
@@ -60,6 +64,9 @@ MANUAL_FAN_LANE = [FAN_LOW, "mid", FAN_MIDDLE, FAN_MEDIUM, FAN_HIGH]
 AUTO_FAN_LANE = ["low/auto", "mid/auto", "high/auto"]
 SWING_ON_SET = {"on", "both", "horizontal", "vertical"}
 
+# Keep the cooling/heating pair this far apart (HomeKit °C) when a write crosses them.
+HEAT_COOL_DEADBAND = 5.0
+
 _OFF_STATES = (HVACMode.OFF, STATE_UNAVAILABLE, STATE_UNKNOWN)
 
 
@@ -76,6 +83,59 @@ def hk_temperature(attributes: Mapping[str, Any], key: str, unit: str) -> float 
     if value is None:
         return None
     return float(temperature_to_homekit(value, unit))
+
+
+def temperature_range(
+    attributes: Mapping[str, Any],
+    unit: str,
+    default_min: float = DEFAULT_MIN_TEMP,
+    default_max: float = DEFAULT_MAX_TEMP,
+) -> tuple[float, float]:
+    """Return the HeaterCooler threshold min/max for a climate entity.
+
+    Mirrors core Thermostat: round to HomeKit's half-degree grid, correct a
+    reversed range, and clamp the floor to zero (a negative bound crashes the
+    iOS Home app).
+    """
+    raw_min = attributes.get(ATTR_MIN_TEMP)
+    raw_max = attributes.get(ATTR_MAX_TEMP)
+    min_temp = round(temperature_to_homekit(raw_min, unit) * 2) / 2 if raw_min else default_min
+    max_temp = round(temperature_to_homekit(raw_max, unit) * 2) / 2 if raw_max else default_max
+    min_temp, max_temp = min(min_temp, max_temp), max(min_temp, max_temp)
+    min_temp = max(min_temp, 0.0)
+    max_temp = max(max_temp, min_temp)
+    return min_temp, max_temp
+
+
+def resolve_dual_setpoints(
+    cooling: float | None,
+    heating: float | None,
+    current_cooling: float | None,
+    current_heating: float | None,
+    min_temp: float,
+    max_temp: float,
+) -> tuple[float | None, float | None]:
+    """Resolve HeaterCooler threshold writes into clamped high/low setpoints.
+
+    Mirrors core Thermostat: seed each side from its current value, apply the
+    written thresholds in cooling-then-heating order, hold the pair a deadband
+    apart when a write crosses them, then clamp both into the advertised range.
+    """
+    high = current_cooling
+    low = current_heating
+    if cooling is not None:
+        high = cooling
+        if low is not None and high < low:
+            low = high - HEAT_COOL_DEADBAND
+    if heating is not None:
+        low = heating
+        if high is not None and low > high:
+            high = low + HEAT_COOL_DEADBAND
+    if high is not None:
+        high = min(high, max_temp)
+    if low is not None:
+        low = max(low, min_temp)
+    return high, low
 
 
 def build_target_state_map(supports_auto: bool, supports_heat_cool: bool) -> dict[int, HVACMode]:

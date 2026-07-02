@@ -11,8 +11,6 @@ from homeassistant.components.climate import (
     ATTR_FAN_MODES,
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODES,
-    ATTR_MAX_TEMP,
-    ATTR_MIN_TEMP,
     ATTR_SWING_MODE,
     ATTR_SWING_MODES,
     ATTR_TARGET_TEMP_HIGH,
@@ -30,7 +28,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.components.homekit import const as homekit_const
 from homeassistant.components.homekit.accessories import TYPES, HomeAccessory
-from homeassistant.components.homekit.util import temperature_to_homekit, temperature_to_states
+from homeassistant.components.homekit.util import temperature_to_states
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
@@ -54,10 +52,12 @@ from .climate_util import (
     is_active,
     percentage_for_fan_mode,
     plan_active_mode_change,
+    resolve_dual_setpoints,
     resolve_swing_mode,
     select_single_setpoint,
     swing_is_on,
     target_state_valid_values,
+    temperature_range,
 )
 from .const import CONF_FAN_LANE, DEFAULT_FAN_LANE
 
@@ -136,18 +136,15 @@ class HeaterCooler(HomeAccessory):
         )
         self.char_current_temp = service.configure_char(CHAR_CURRENT_TEMPERATURE, value=21.0)
 
-        min_temp_c = attributes.get(ATTR_MIN_TEMP, 7.0)
-        max_temp_c = attributes.get(ATTR_MAX_TEMP, 35.0)
-        min_temp_hk = temperature_to_homekit(min_temp_c, self._unit)
-        max_temp_hk = temperature_to_homekit(max_temp_c, self._unit)
+        self._min_temp, self._max_temp = temperature_range(attributes, self._unit)
 
         step_hk = self._step
         if self._unit != "°C":
             step_hk = self._step * 5.0 / 9.0
 
         temp_properties = {
-            PROP_MIN_VALUE: min_temp_hk,
-            PROP_MAX_VALUE: max_temp_hk,
+            PROP_MIN_VALUE: self._min_temp,
+            PROP_MAX_VALUE: self._max_temp,
             PROP_MIN_STEP: step_hk,
         }
         self.char_cool = service.configure_char(
@@ -234,11 +231,19 @@ class HeaterCooler(HomeAccessory):
         attributes = current_state.attributes
 
         if ATTR_TARGET_TEMP_HIGH in attributes or ATTR_TARGET_TEMP_LOW in attributes:
+            high, low = resolve_dual_setpoints(
+                cooling_temp,
+                heating_temp,
+                as_float(self.char_cool.value),
+                as_float(self.char_heat.value),
+                self._min_temp,
+                self._max_temp,
+            )
             temp_data: dict[str, float] = {}
-            if cooling_temp is not None:
-                temp_data[ATTR_TARGET_TEMP_HIGH] = temperature_to_states(cooling_temp, self._unit)
-            if heating_temp is not None:
-                temp_data[ATTR_TARGET_TEMP_LOW] = temperature_to_states(heating_temp, self._unit)
+            if high is not None:
+                temp_data[ATTR_TARGET_TEMP_HIGH] = temperature_to_states(high, self._unit)
+            if low is not None:
+                temp_data[ATTR_TARGET_TEMP_LOW] = temperature_to_states(low, self._unit)
             if temp_data:
                 service_calls.append((SERVICE_SET_TEMPERATURE, temp_data))
             return
