@@ -17,6 +17,7 @@ Native HeaterCooler support was proposed for core in [home-assistant/core#148231
 
 - Native HomeKit **HeaterCooler** service for selected climates
 - Maps HVAC mode, active state, thresholds, fan speed, and swing mode
+- Configurable fan slider mode: three speeds mapped to auto or manual fan settings
 - Supports single setpoint and dual threshold climates
 - Safe-by-default targeting (`include_entities` required)
 - Adds a diagnostic sensor so you can verify active patch coverage in Home Assistant UI
