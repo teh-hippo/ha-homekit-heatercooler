@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v1.3.1 (2026-07-02)
+
+### Bug Fixes
+
+- Harden temperature range to match core Thermostat
+  ([`1040849`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/1040849531b3ca134c8d6d90194353e20c285cab))
+
+### Documentation
+
+- Note configurable fan slider mode in features
+  ([`b56efba`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/b56efbac6f2a1f5ba42054debafa5a8cef80c598))
+
+
 ## v1.3.0 (2026-07-02)
 
 ### Features
