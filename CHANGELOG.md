@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v1.3.0 (2026-07-02)
+
+### Features
+
+- Add fan_lane option and a 3-detent HeaterCooler fan slider
+  ([`6cb11fc`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/6cb11fc552427b4b14fb6032e4810f175b293957))
+
+
 ## v1.2.46 (2026-07-02)
 
 ### Bug Fixes
