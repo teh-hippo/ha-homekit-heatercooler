@@ -5,6 +5,14 @@ from __future__ import annotations
 from unittest.mock import patch
 
 import pytest
+
+from custom_components.homekit_heatercooler.climate_util import HC_COOLING, HC_IDLE
+from custom_components.homekit_heatercooler.type_heatercooler import (
+    CHAR_ACTIVE,
+    CHAR_COOLING_THRESHOLD_TEMPERATURE,
+    CHAR_HEATING_THRESHOLD_TEMPERATURE,
+    HeaterCooler,
+)
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
     ATTR_HVAC_ACTION,
@@ -25,14 +33,6 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_SUPPORTED_FEATURES
 from homeassistant.core import HomeAssistant
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
-
-from custom_components.homekit_heatercooler.climate_util import HC_COOLING, HC_IDLE
-from custom_components.homekit_heatercooler.type_heatercooler import (
-    CHAR_ACTIVE,
-    CHAR_COOLING_THRESHOLD_TEMPERATURE,
-    CHAR_HEATING_THRESHOLD_TEMPERATURE,
-    HeaterCooler,
-)
 from tests.common import ENTITY_ID, set_climate
 
 

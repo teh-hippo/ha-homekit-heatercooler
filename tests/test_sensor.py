@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
+from pytest_homeassistant_custom_component.common import MockConfigEntry
+
+from custom_components.homekit_heatercooler.const import DOMAIN
 from homeassistant.components.climate import ATTR_HVAC_MODES, HVACMode
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entityfilter import CONF_INCLUDE_ENTITIES
-from pytest_homeassistant_custom_component.common import MockConfigEntry
-
-from custom_components.homekit_heatercooler.const import DOMAIN
 from tests.common import ENTITY_ID, set_climate
 
 

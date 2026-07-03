@@ -2,13 +2,6 @@
 
 from __future__ import annotations
 
-from homeassistant.config_entries import SOURCE_USER
-from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers.entityfilter import (
-    CONF_EXCLUDE_ENTITIES,
-    CONF_INCLUDE_ENTITIES,
-)
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.homekit_heatercooler.config_flow import _normalize_input
@@ -18,6 +11,13 @@ from custom_components.homekit_heatercooler.const import (
     DOMAIN,
     FAN_LANE_AUTO,
     FAN_LANE_MANUAL,
+)
+from homeassistant.config_entries import SOURCE_USER
+from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.entityfilter import (
+    CONF_EXCLUDE_ENTITIES,
+    CONF_INCLUDE_ENTITIES,
 )
 
 

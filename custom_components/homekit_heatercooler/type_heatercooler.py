@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
-import logging
 from collections.abc import Iterable
+import logging
 from typing import Any
+
+from pyhap.characteristic import Characteristic
+from pyhap.const import CATEGORY_THERMOSTAT
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
@@ -21,15 +24,13 @@ from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_LOW,
     ATTR_TARGET_TEMP_STEP,
     ATTR_TEMPERATURE,
+    DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
     ClimateEntityFeature,
     HVACMode,
-)
-from homeassistant.components.climate import (
-    DOMAIN as CLIMATE_DOMAIN,
 )
 from homeassistant.components.homekit import const as homekit_const
 from homeassistant.components.homekit.accessories import TYPES, HomeAccessory
@@ -43,8 +44,6 @@ from homeassistant.const import (
 )
 from homeassistant.core import State, callback
 from homeassistant.util.enum import try_parse_enum
-from pyhap.characteristic import Characteristic
-from pyhap.const import CATEGORY_THERMOSTAT
 
 from .climate_util import (
     HC_INACTIVE,

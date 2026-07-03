@@ -2,10 +2,6 @@
 
 from __future__ import annotations
 
-from homeassistant.components.climate import ATTR_FAN_MODES, ATTR_HVAC_MODES, HVACMode
-from homeassistant.const import ATTR_SUPPORTED_FEATURES
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entityfilter import CONF_INCLUDE_ENTITIES
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.homekit_heatercooler.const import (
@@ -13,6 +9,10 @@ from custom_components.homekit_heatercooler.const import (
     DATA_PATCH_STATUS,
     DOMAIN,
 )
+from homeassistant.components.climate import ATTR_FAN_MODES, ATTR_HVAC_MODES, HVACMode
+from homeassistant.const import ATTR_SUPPORTED_FEATURES
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers.entityfilter import CONF_INCLUDE_ENTITIES
 from tests.common import ENTITY_ID, set_climate
 
 

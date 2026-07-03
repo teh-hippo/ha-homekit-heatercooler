@@ -6,29 +6,6 @@ import logging
 from unittest.mock import patch
 
 import pytest
-from homeassistant.components.climate import (
-    ATTR_CURRENT_TEMPERATURE,
-    ATTR_FAN_MODE,
-    ATTR_FAN_MODES,
-    ATTR_HVAC_MODE,
-    ATTR_HVAC_MODES,
-    ATTR_MAX_TEMP,
-    ATTR_MIN_TEMP,
-    ATTR_SWING_MODE,
-    ATTR_SWING_MODES,
-    ATTR_TARGET_TEMP_STEP,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_HVAC_MODE,
-    SERVICE_SET_SWING_MODE,
-    ClimateEntityFeature,
-    HVACMode,
-)
-from homeassistant.components.climate import (
-    DOMAIN as CLIMATE_DOMAIN,
-)
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
-from homeassistant.core import HomeAssistant
-from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 
 from custom_components.homekit_heatercooler.climate_util import (
     HC_INACTIVE,
@@ -50,6 +27,27 @@ from custom_components.homekit_heatercooler.type_heatercooler import (
     PROP_MIN_STEP,
     HeaterCooler,
 )
+from homeassistant.components.climate import (
+    ATTR_CURRENT_TEMPERATURE,
+    ATTR_FAN_MODE,
+    ATTR_FAN_MODES,
+    ATTR_HVAC_MODE,
+    ATTR_HVAC_MODES,
+    ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP,
+    ATTR_SWING_MODE,
+    ATTR_SWING_MODES,
+    ATTR_TARGET_TEMP_STEP,
+    DOMAIN as CLIMATE_DOMAIN,
+    SERVICE_SET_FAN_MODE,
+    SERVICE_SET_HVAC_MODE,
+    SERVICE_SET_SWING_MODE,
+    ClimateEntityFeature,
+    HVACMode,
+)
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
+from homeassistant.core import HomeAssistant
+from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
 from tests.common import set_climate as _set_climate
 
 SEVEN_FAN_MODES = ["Auto", "Low", "Mid", "High", "Low/Auto", "Mid/Auto", "High/Auto"]

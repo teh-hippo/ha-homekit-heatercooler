@@ -6,6 +6,7 @@ from collections.abc import Generator
 from unittest.mock import patch
 
 import pytest
+
 from homeassistant.components.homekit.accessories import HomeDriver
 from homeassistant.components.homekit.const import BRIDGE_NAME
 from homeassistant.components.homekit.iidmanager import AccessoryIIDStorage

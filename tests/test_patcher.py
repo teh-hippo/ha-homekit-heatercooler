@@ -6,17 +6,6 @@ import logging
 from unittest.mock import patch
 
 import pytest
-from homeassistant.components import homekit as homekit_module
-from homeassistant.components.climate import (
-    ATTR_FAN_MODES,
-    ATTR_HVAC_MODES,
-    ATTR_SWING_MODES,
-    ClimateEntityFeature,
-    HVACMode,
-)
-from homeassistant.components.homekit import accessories as homekit_accessories
-from homeassistant.const import ATTR_SUPPORTED_FEATURES
-from homeassistant.core import HomeAssistant, State
 
 from custom_components.homekit_heatercooler.const import (
     DATA_PATCH_STATE,
@@ -31,6 +20,17 @@ from custom_components.homekit_heatercooler.patcher import (
     remove_patch,
     supports_heatercooler,
 )
+from homeassistant.components import homekit as homekit_module
+from homeassistant.components.climate import (
+    ATTR_FAN_MODES,
+    ATTR_HVAC_MODES,
+    ATTR_SWING_MODES,
+    ClimateEntityFeature,
+    HVACMode,
+)
+from homeassistant.components.homekit import accessories as homekit_accessories
+from homeassistant.const import ATTR_SUPPORTED_FEATURES
+from homeassistant.core import HomeAssistant, State
 from tests.common import ENTITY_ID, set_climate
 
 SEVEN_FAN_MODES = ["Auto", "Low", "Mid", "High", "Low/Auto", "Mid/Auto", "High/Auto"]

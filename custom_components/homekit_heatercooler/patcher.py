@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-import inspect
-import logging
 from collections.abc import Callable
 from dataclasses import dataclass
+import inspect
+import logging
 from typing import Any
 
 from homeassistant.components import homekit as homekit_module

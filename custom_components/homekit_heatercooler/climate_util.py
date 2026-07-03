@@ -7,8 +7,8 @@ any HeaterCooler front end.
 
 from __future__ import annotations
 
-import math
 from collections.abc import Iterable, Mapping
+import math
 from typing import Any
 
 from homeassistant.components.climate import (

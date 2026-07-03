@@ -2,7 +2,11 @@
 
 from __future__ import annotations
 
+from pyhap.const import HAP_REPR_AID, HAP_REPR_CHARS, HAP_REPR_IID, HAP_REPR_VALUE
 import pytest
+from pytest_homeassistant_custom_component.common import async_mock_service
+
+from custom_components.homekit_heatercooler.type_heatercooler import HeaterCooler
 from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_FAN_MODES,
@@ -13,6 +17,7 @@ from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     ATTR_TEMPERATURE,
+    DOMAIN as CLIMATE_DOMAIN,
     SERVICE_SET_FAN_MODE,
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_SWING_MODE,
@@ -20,16 +25,9 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.components.climate import (
-    DOMAIN as CLIMATE_DOMAIN,
-)
 from homeassistant.components.homekit.accessories import HomeDriver
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
 from homeassistant.core import HomeAssistant
-from pyhap.const import HAP_REPR_AID, HAP_REPR_CHARS, HAP_REPR_IID, HAP_REPR_VALUE
-from pytest_homeassistant_custom_component.common import async_mock_service
-
-from custom_components.homekit_heatercooler.type_heatercooler import HeaterCooler
 from tests.common import ENTITY_ID, set_climate
 
 

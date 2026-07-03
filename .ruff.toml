@@ -18,4 +18,7 @@ ignore = [
 ]
 
 [lint.isort]
-known-first-party = ["custom_components.homekit_heatercooler"]
+combine-as-imports = true
+force-sort-within-sections = true
+split-on-trailing-comma = false
+known-first-party = ["homeassistant", "custom_components.homekit_heatercooler"]

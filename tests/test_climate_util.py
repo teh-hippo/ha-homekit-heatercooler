@@ -3,15 +3,6 @@
 from __future__ import annotations
 
 import pytest
-from homeassistant.components.climate import (
-    ATTR_HVAC_MODE,
-    ATTR_MAX_TEMP,
-    ATTR_MIN_TEMP,
-    SERVICE_SET_HVAC_MODE,
-    HVACAction,
-    HVACMode,
-)
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 
 from custom_components.homekit_heatercooler.climate_util import (
     HC_COOLING,
@@ -38,6 +29,15 @@ from custom_components.homekit_heatercooler.climate_util import (
     swing_is_on,
     temperature_range,
 )
+from homeassistant.components.climate import (
+    ATTR_HVAC_MODE,
+    ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP,
+    SERVICE_SET_HVAC_MODE,
+    HVACAction,
+    HVACMode,
+)
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 
 AUTO_MAP = build_target_state_map(True, False, True, True)
 SEVEN_MODES = ["Auto", "Low", "Mid", "High", "Low/Auto", "Mid/Auto", "High/Auto"]
