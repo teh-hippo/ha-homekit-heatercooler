@@ -1,0 +1,114 @@
+name: Core validation
+
+# Heavy, out-of-band validation that the upstream port still works against the
+# LATEST Home Assistant core `dev`. It is NOT run on every push (it checks out
+# and builds core, which is slow); instead it runs on demand and weekly.
+#
+# What it proves:
+#   The custom component's feature folds into upstream as a mechanical
+#   "project + copy + wire" operation. Concretely it reconstructs the upstream
+#   change on top of current core `dev` and runs the feature's own tests:
+#     1. Project the two shared files into core layout (scripts/port_to_core.py).
+#     2. Apply the four small wiring edits (scripts/core-wiring.patch).
+#     3. Pull in the feature's heater-cooler test modules from the fork.
+#     4. Run those tests + a homekit import smoke against latest core.
+#
+# What a failure means:
+#   - Patch step fails  -> core `dev` moved under the wiring edits; regenerate
+#     scripts/core-wiring.patch from the fork (this is the intended drift signal).
+#   - Tests fail        -> upstream core changed behaviour the feature relies on;
+#     the shared files and/or the port need updating before the next upstream PR.
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Mondays 06:00 UTC. Weekly is enough to catch core drift.
+    - cron: "0 6 * * 1"
+
+concurrency:
+  group: core-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  FORK_REPO: teh-hippo/core
+  FORK_REF: feat/homekit-heatercooler-optin
+  CORE_REPO: home-assistant/core
+  CORE_REF: dev
+
+jobs:
+  validate:
+    name: Validate port against core dev
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - name: Check out this repository (port script + wiring patch)
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      - name: Check out home-assistant/core dev
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          repository: ${{ env.CORE_REPO }}
+          ref: ${{ env.CORE_REF }}
+          path: core
+
+      - uses: astral-sh/setup-uv@fac544c07dec837d0ccb6301d7b5580bf5edae39 # v8.2.0
+        with:
+          python-version: "3.14"
+
+      - name: Project the shared files into core layout
+        run: python3 scripts/port_to_core.py --out core/homeassistant/components/homekit
+
+      - name: Apply the core wiring patch
+        run: |
+          set -euo pipefail
+          if ! git -C core apply --verbose "${GITHUB_WORKSPACE}/scripts/core-wiring.patch"; then
+            echo "::error::scripts/core-wiring.patch did not apply to current" \
+              "${CORE_REPO}@${CORE_REF}. The wiring has drifted upstream;" \
+              "regenerate the patch from the fork before the next port." >&2
+            exit 1
+          fi
+
+      - name: Fetch the feature's heater-cooler test modules from the fork
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          for f in test_type_heatercooler.py test_climate_util.py; do
+            echo "Fetching ${FORK_REPO}@${FORK_REF}:tests/components/homekit/${f}"
+            if ! gh api \
+              "repos/${FORK_REPO}/contents/tests/components/homekit/${f}?ref=${FORK_REF}" \
+              --jq '.content' | base64 -d > "core/tests/components/homekit/${f}"; then
+              echo "::error::Could not fetch test ${f} from ${FORK_REPO}@${FORK_REF}." >&2
+              exit 1
+            fi
+            if [ ! -s "core/tests/components/homekit/${f}" ]; then
+              echo "::error::Fetched test ${f} is empty; aborting." >&2
+              exit 1
+            fi
+          done
+
+      - name: Install scoped core test dependencies
+        working-directory: core
+        # Scoped on purpose: `-e .` gives the homeassistant package + its runtime
+        # deps, requirements_test.txt gives the pytest framework, and the homekit
+        # manifest requirements give the component deps. We deliberately avoid
+        # requirements_test_all.txt (deps for every integration, ~10min+) because
+        # the heater-cooler tests only touch core + homekit.
+        run: |
+          set -euo pipefail
+          uv venv
+          uv pip install -e . -r requirements_test.txt
+          uv pip install $(jq -r '.requirements[]' homeassistant/components/homekit/manifest.json)
+
+      - name: Run heater-cooler tests + homekit import smoke
+        working-directory: core
+        run: |
+          set -euo pipefail
+          uv run python -c "import homeassistant.components.homekit.type_heatercooler, homeassistant.components.homekit.climate_util; print('homekit heater-cooler import smoke OK')"
+          uv run pytest \
+            tests/components/homekit/test_type_heatercooler.py \
+            tests/components/homekit/test_climate_util.py \
+            --no-header -p no:sugar
