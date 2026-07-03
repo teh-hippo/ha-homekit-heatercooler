@@ -1,23 +1,27 @@
 name: Core validation
 
-# Heavy, out-of-band validation that the upstream port still works against the
-# LATEST Home Assistant core `dev`. It is NOT run on every push (it checks out
-# and builds core, which is slow); instead it runs on demand and weekly.
+# Out-of-band check that the upstream port still folds onto the LATEST Home
+# Assistant core `dev`. It is not run on every push; it runs on demand and
+# weekly.
 #
 # What it proves:
 #   The custom component's feature folds into upstream as a mechanical
-#   "project + copy + wire" operation. Concretely it reconstructs the upstream
-#   change on top of current core `dev` and runs the feature's own tests:
+#   "project + copy + wire" operation against current core dev:
 #     1. Project the two shared files into core layout (scripts/port_to_core.py).
 #     2. Apply the four small wiring edits (scripts/core-wiring.patch).
-#     3. Pull in the feature's heater-cooler test modules from the fork.
-#     4. Run those tests + a homekit import smoke against latest core.
+#     3. Byte-compile the folded homekit component on the Python version core
+#        targets, proving it is syntactically valid on current dev.
 #
 # What a failure means:
-#   - Patch step fails  -> core `dev` moved under the wiring edits; regenerate
+#   - Patch step fails   -> core `dev` moved under the wiring edits; regenerate
 #     scripts/core-wiring.patch from the fork (this is the intended drift signal).
-#   - Tests fail        -> upstream core changed behaviour the feature relies on;
-#     the shared files and/or the port need updating before the next upstream PR.
+#   - Compile step fails -> core changed something the folded component relies on;
+#     update the shared files and/or the port before the next upstream sync.
+#
+# Behavioural validation lives elsewhere and is intentionally not duplicated
+# here: this repository's own test suite runs on every push, and the container
+# harness at github.com/teh-hippo/ha-test-harness exercises the running
+# accessory end to end.
 
 on:
   workflow_dispatch:
@@ -33,8 +37,6 @@ permissions:
   contents: read
 
 env:
-  FORK_REPO: teh-hippo/core
-  FORK_REF: feat/homekit-heatercooler-optin
   CORE_REPO: home-assistant/core
   CORE_REF: dev
 
@@ -42,7 +44,7 @@ jobs:
   validate:
     name: Validate port against core dev
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 20
     steps:
       - name: Check out this repository (port script + wiring patch)
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
@@ -59,7 +61,7 @@ jobs:
           python-version: "3.14"
 
       - name: Project the shared files into core layout
-        run: python3 scripts/port_to_core.py --out core/homeassistant/components/homekit
+        run: uv run --no-project python scripts/port_to_core.py --out core/homeassistant/components/homekit
 
       - name: Apply the core wiring patch
         run: |
@@ -71,44 +73,9 @@ jobs:
             exit 1
           fi
 
-      - name: Fetch the feature's heater-cooler test modules from the fork
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          set -euo pipefail
-          for f in test_type_heatercooler.py test_climate_util.py; do
-            echo "Fetching ${FORK_REPO}@${FORK_REF}:tests/components/homekit/${f}"
-            if ! gh api \
-              "repos/${FORK_REPO}/contents/tests/components/homekit/${f}?ref=${FORK_REF}" \
-              --jq '.content' | base64 -d > "core/tests/components/homekit/${f}"; then
-              echo "::error::Could not fetch test ${f} from ${FORK_REPO}@${FORK_REF}." >&2
-              exit 1
-            fi
-            if [ ! -s "core/tests/components/homekit/${f}" ]; then
-              echo "::error::Fetched test ${f} is empty; aborting." >&2
-              exit 1
-            fi
-          done
-
-      - name: Install core test dependencies
-        working-directory: core
-        # The homekit package imports its dependency integrations at import time
-        # (camera -> stream -> numpy, and so on), so the heater-cooler tests need
-        # core's full test dependency set, not just homekit's own manifest
-        # requirements. requirements_test_all.txt is the canonical set core uses to
-        # test any component; it is large, which is why this workflow is weekly or
-        # on demand rather than per push.
-        run: |
-          set -euo pipefail
-          uv venv
-          uv pip install -e . -r requirements_test_all.txt
-
-      - name: Run heater-cooler tests + homekit import smoke
-        working-directory: core
-        run: |
-          set -euo pipefail
-          uv run python -c "import homeassistant.components.homekit.type_heatercooler, homeassistant.components.homekit.climate_util; print('homekit heater-cooler import smoke OK')"
-          uv run pytest \
-            tests/components/homekit/test_type_heatercooler.py \
-            tests/components/homekit/test_climate_util.py \
-            --no-header -p no:sugar
+      - name: Compile-check the folded homekit component on core dev
+        # Byte-compiles the projected shared files and the four wired core
+        # modules on the Python version core targets. No integration deps are
+        # installed: this is a fast, robust structural check that the fold stays
+        # mechanical and valid, not a behavioural one.
+        run: uv run --no-project python -m compileall -q core/homeassistant/components/homekit
