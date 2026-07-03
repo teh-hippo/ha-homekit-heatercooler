@@ -15,6 +15,7 @@ from custom_components.homekit_heatercooler.type_heatercooler import (
 )
 from homeassistant.components.climate import (
     ATTR_CURRENT_TEMPERATURE,
+    ATTR_FAN_MODE,
     ATTR_HVAC_ACTION,
     ATTR_HVAC_MODES,
     ATTR_MAX_TEMP,
@@ -24,6 +25,7 @@ from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     ATTR_TEMPERATURE,
+    SERVICE_SET_FAN_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
     ClimateEntityFeature,
@@ -220,4 +222,54 @@ async def test_non_finite_swing_write_is_noop(
     acc = _accessory(hass, hk_driver)
     with patch.object(acc, "async_call_service") as mock_call:
         acc._set_swing_mode(bad)
+    assert not mock_call.called
+
+
+async def test_single_setpoint_temperature_write_is_clamped(
+    hass: HomeAssistant, hk_driver: object
+) -> None:
+    """A single-setpoint write above the range is clamped to the max temp."""
+    set_climate(
+        hass,
+        HVACMode.COOL,
+        **{ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF], ATTR_TEMPERATURE: 22},
+    )
+    acc = _accessory(hass, hk_driver)
+    with patch.object(acc, "async_call_service") as mock_call:
+        acc._set_chars({CHAR_COOLING_THRESHOLD_TEMPERATURE: 100.0})
+    assert mock_call.call_args[0][1] == SERVICE_SET_TEMPERATURE
+    assert mock_call.call_args[0][2][ATTR_TEMPERATURE] == 30.0
+
+
+async def test_rotation_speed_above_range_uses_clamped_value(
+    hass: HomeAssistant, hk_driver: object
+) -> None:
+    """An over-range rotation-speed write drives the clamped top fan mode."""
+    set_climate(hass, HVACMode.COOL, **{ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF]})
+    acc = _accessory(hass, hk_driver)
+    top_mode = acc.fan_modes[acc.ordered_fan_speeds[-1]]
+    with patch.object(acc, "async_call_service") as mock_call:
+        acc._set_fan_speed(150)
+    assert mock_call.call_args[0][1] == SERVICE_SET_FAN_MODE
+    assert mock_call.call_args[0][2][ATTR_FAN_MODE] == top_mode
+
+
+async def test_out_of_range_swing_write_is_ignored(
+    hass: HomeAssistant, hk_driver: object
+) -> None:
+    """A swing write outside the boolean 0/1 range is rejected, not treated as on."""
+    set_climate(
+        hass,
+        HVACMode.COOL,
+        **{
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.SWING_MODE,
+            ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF],
+            ATTR_SWING_MODES: ["off", "on"],
+            ATTR_SWING_MODE: "off",
+        },
+    )
+    acc = _accessory(hass, hk_driver)
+    with patch.object(acc, "async_call_service") as mock_call:
+        acc._set_swing_mode(2)
     assert not mock_call.called

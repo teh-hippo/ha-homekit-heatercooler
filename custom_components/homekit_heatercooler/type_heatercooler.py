@@ -340,6 +340,7 @@ class HeaterCooler(HomeAccessory):
         )
         if selected_temp is None:
             return
+        selected_temp = min(max(selected_temp, self._min_temp), self._max_temp)
         service_calls.append(
             (
                 SERVICE_SET_TEMPERATURE,
@@ -358,8 +359,12 @@ class HeaterCooler(HomeAccessory):
         """Set fan speed through the climate service."""
         if not self.ordered_fan_speeds:
             return
+        speed_value = as_float(speed)
+        if speed_value is None:
+            return
+        speed_value = min(max(speed_value, 0.0), HK_MAX_ROTATION_SPEED)
         fan_mode = fan_mode_for_percentage(
-            self.ordered_fan_speeds, self.fan_modes, speed
+            self.ordered_fan_speeds, self.fan_modes, speed_value
         )
         if fan_mode is None:
             return
@@ -374,17 +379,16 @@ class HeaterCooler(HomeAccessory):
         if self.swing_on_mode is None:
             return
 
-        swing_value = as_float(swing_on)
-        if swing_value is None:
-            return
-
         state = self.hass.states.get(self.entity_id)
         if not state:
             return
 
         swing_modes = state.attributes.get(ATTR_SWING_MODES, [])
         current_swing = state.attributes.get(ATTR_SWING_MODE)
-        swing_enabled = bool(int(swing_value))
+        swing_value = as_hap_integer(swing_on)
+        if swing_value not in (0, 1):
+            return
+        swing_enabled = bool(swing_value)
         if swing_enabled == swing_is_enabled(current_swing, swing_modes):
             return
         target_mode = resolve_swing_mode(swing_enabled, swing_modes, self.swing_on_mode)
