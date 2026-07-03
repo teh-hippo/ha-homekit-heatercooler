@@ -13,6 +13,8 @@ Home Assistant's HomeKit Bridge maps `climate` entities to a Thermostat accessor
 
 Native HeaterCooler support was proposed for core in [home-assistant/core#148231](https://github.com/home-assistant/core/pull/148231) but was not accepted, so the Thermostat stays core's default. This integration provides the HeaterCooler mapping as an opt-in on top of the existing HomeKit Bridge, remapping only the `climate` entities you explicitly include (for example, `climate.aircon`). Everything else stays untouched.
 
+This integration is the reference implementation of an opt-in native HeaterCooler, and a matching Home Assistant core patch tracks it. That patch adds a `type: heater_cooler` option for `climate` entities in the HomeKit integration while the default stays Thermostat, so existing setups are unaffected unless you opt in.
+
 ## Features
 
 - Native HomeKit **HeaterCooler** service for selected climates

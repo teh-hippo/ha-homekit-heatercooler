@@ -3,11 +3,16 @@
     "step": {
       "user": {
         "title": "Set up HomeKit HeaterCooler Bridge",
-        "description": "Choose which climate entities should be exposed as HeaterCooler in Apple Home.",
+        "description": "Choose how each climate entity is represented in Apple Home. Included entities are exposed as a HeaterCooler tile; every other climate keeps Home Assistant's default Thermostat.",
         "data": {
           "include_entities": "Include entities",
           "exclude_entities": "Exclude entities",
           "fan_lane": "Fan slider mode"
+        },
+        "data_description": {
+          "include_entities": "Represented as a HeaterCooler in Apple Home.",
+          "exclude_entities": "Kept on the default Thermostat, even if included above.",
+          "fan_lane": "Which fan modes the three-position HomeKit fan slider drives."
         }
       }
     },
@@ -19,11 +24,16 @@
     "step": {
       "init": {
         "title": "HomeKit HeaterCooler Bridge options",
-        "description": "Update which climate entities are exposed as HeaterCooler in Apple Home.",
+        "description": "Update how each climate entity is represented in Apple Home. Included entities are exposed as a HeaterCooler tile; every other climate keeps Home Assistant's default Thermostat.",
         "data": {
           "include_entities": "Include entities",
           "exclude_entities": "Exclude entities",
           "fan_lane": "Fan slider mode"
+        },
+        "data_description": {
+          "include_entities": "Represented as a HeaterCooler in Apple Home.",
+          "exclude_entities": "Kept on the default Thermostat, even if included above.",
+          "fan_lane": "Which fan modes the three-position HomeKit fan slider drives."
         }
       }
     }
