@@ -1,6 +1,27 @@
 # CHANGELOG
 
 
+## v1.4.1 (2026-07-03)
+
+### Bug Fixes
+
+- Back-port core setpoint, fan and swing clamps
+  ([`57ada45`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/57ada45bb82be8a552ae6bd78ed76eb449ed4e8e))
+
+### Code Style
+
+- Adopt home-assistant core line length (88)
+  ([`4024087`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/40240872e90fab0d2d2c17352306006b6abecd5e))
+
+- Align import sorting with home-assistant core
+  ([`4a039cb`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/4a039cbaf2f27b9a5b2ba008540a8318444140d2))
+
+### Refactoring
+
+- Mirror core structure in shared HeaterCooler files
+  ([`9c0cf83`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/9c0cf831065b7185c6c8dcb63f07035f3c70b6b9))
+
+
 ## v1.4.0 (2026-07-03)
 
 ### Bug Fixes
