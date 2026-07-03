@@ -18,6 +18,7 @@ from homeassistant.components.homekit import accessories as homekit_accessories
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME
 from homeassistant.core import HomeAssistant, State
 
+from .climate_util import as_float
 from .const import CONF_FAN_LANE, DATA_PATCH_STATE, DEFAULT_FAN_LANE, DOMAIN
 from .type_heatercooler import register_heatercooler_type
 
@@ -44,7 +45,8 @@ class PatchState:
 
 def supports_heatercooler(state: State) -> bool:
     """Return True if a climate entity has capabilities suited to HeaterCooler."""
-    features = int(state.attributes.get(ATTR_SUPPORTED_FEATURES, 0))
+    features_value = as_float(state.attributes.get(ATTR_SUPPORTED_FEATURES, 0))
+    features = int(features_value) if features_value is not None else 0
     supports_fan_or_swing = bool(features & ClimateEntityFeature.FAN_MODE or features & ClimateEntityFeature.SWING_MODE)
     has_modes = bool(state.attributes.get(ATTR_FAN_MODES) or state.attributes.get(ATTR_SWING_MODES))
     return supports_fan_or_swing and has_modes
