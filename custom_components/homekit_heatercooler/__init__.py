@@ -12,7 +12,10 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STARTED
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import dispatcher_send
-from homeassistant.helpers.entityfilter import CONF_EXCLUDE_ENTITIES, CONF_INCLUDE_ENTITIES
+from homeassistant.helpers.entityfilter import (
+    CONF_EXCLUDE_ENTITIES,
+    CONF_INCLUDE_ENTITIES,
+)
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util import dt as dt_util
 
@@ -39,9 +42,15 @@ CONFIG_SCHEMA = vol.Schema(
     {
         DOMAIN: vol.Schema(
             {
-                vol.Optional(CONF_INCLUDE_ENTITIES, default=[]): vol.All(cv.ensure_list, [cv.entity_id]),
-                vol.Optional(CONF_EXCLUDE_ENTITIES, default=[]): vol.All(cv.ensure_list, [cv.entity_id]),
-                vol.Optional(CONF_FAN_LANE, default=DEFAULT_FAN_LANE): vol.In([FAN_LANE_AUTO, FAN_LANE_MANUAL]),
+                vol.Optional(CONF_INCLUDE_ENTITIES, default=[]): vol.All(
+                    cv.ensure_list, [cv.entity_id]
+                ),
+                vol.Optional(CONF_EXCLUDE_ENTITIES, default=[]): vol.All(
+                    cv.ensure_list, [cv.entity_id]
+                ),
+                vol.Optional(CONF_FAN_LANE, default=DEFAULT_FAN_LANE): vol.In(
+                    [FAN_LANE_AUTO, FAN_LANE_MANUAL]
+                ),
             }
         )
     },
@@ -129,26 +138,36 @@ def _domain_data(hass: HomeAssistant) -> dict[str, Any]:
     return domain_data
 
 
-def _refresh_patch(hass: HomeAssistant, ignore_entry: ConfigEntry | None = None) -> None:
+def _refresh_patch(
+    hass: HomeAssistant, ignore_entry: ConfigEntry | None = None
+) -> None:
     """Apply patch with merged YAML and UI-configured entities."""
     domain_data = _domain_data(hass)
     include_entities, exclude_entities = _combined_entities(hass, ignore_entry)
     if include_entities:
-        apply_patch(hass, include_entities, exclude_entities, _combined_fan_lane(hass, ignore_entry))
+        apply_patch(
+            hass,
+            include_entities,
+            exclude_entities,
+            _combined_fan_lane(hass, ignore_entry),
+        )
     else:
         remove_patch(hass)
     _register_patch_status_refresh(hass, include_entities, exclude_entities)
     _update_patch_status(hass, include_entities, exclude_entities)
     patch_status = domain_data[DATA_PATCH_STATUS]
     _LOGGER.info(
-        "HomeKit HeaterCooler patch loaded (include_entities=%s, exclude_entities=%s, patched_entities=%s)",
+        "HomeKit HeaterCooler patch loaded (include_entities=%s, "
+        "exclude_entities=%s, patched_entities=%s)",
         sorted(include_entities),
         sorted(exclude_entities),
         patch_status["patched_entities"],
     )
 
 
-def _combined_entities(hass: HomeAssistant, ignore_entry: ConfigEntry | None = None) -> tuple[set[str], set[str]]:
+def _combined_entities(
+    hass: HomeAssistant, ignore_entry: ConfigEntry | None = None
+) -> tuple[set[str], set[str]]:
     """Collect include/exclude entities from YAML and config entries."""
     domain_data = _domain_data(hass)
     include_entities = _entity_set(domain_data.get(DATA_YAML_INCLUDE_ENTITIES))
@@ -164,8 +183,10 @@ def _combined_entities(hass: HomeAssistant, ignore_entry: ConfigEntry | None = N
     return include_entities, exclude_entities
 
 
-def _combined_fan_lane(hass: HomeAssistant, ignore_entry: ConfigEntry | None = None) -> str:
-    """Resolve the single, bridge-wide fan lane from YAML and config entries (last entry wins)."""
+def _combined_fan_lane(
+    hass: HomeAssistant, ignore_entry: ConfigEntry | None = None
+) -> str:
+    """Resolve the bridge-wide fan lane from YAML and config entries."""
     fan_lane = _valid_fan_lane(_domain_data(hass).get(DATA_YAML_FAN_LANE))
     for entry in hass.config_entries.async_entries(DOMAIN):
         if ignore_entry is not None and entry.entry_id == ignore_entry.entry_id:

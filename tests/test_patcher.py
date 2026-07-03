@@ -18,7 +18,11 @@ from homeassistant.components.homekit import accessories as homekit_accessories
 from homeassistant.const import ATTR_SUPPORTED_FEATURES
 from homeassistant.core import HomeAssistant, State
 
-from custom_components.homekit_heatercooler.const import DATA_PATCH_STATE, DOMAIN, FAN_LANE_MANUAL
+from custom_components.homekit_heatercooler.const import (
+    DATA_PATCH_STATE,
+    DOMAIN,
+    FAN_LANE_MANUAL,
+)
 from custom_components.homekit_heatercooler.patcher import (
     EXPECTED_GET_ACCESSORY_PARAMS,
     _get_accessory_params,
@@ -67,9 +71,13 @@ def test_supports_heatercooler_modes_without_feature() -> None:
 
 
 @pytest.mark.parametrize("bad_features", [None, "abc", [1, 2], float("nan")])
-def test_supports_heatercooler_non_numeric_features_is_false(bad_features: object) -> None:
-    """A malformed supported_features must return False, not raise in the diagnostic path."""
-    state = _state(**{ATTR_SUPPORTED_FEATURES: bad_features, ATTR_FAN_MODES: ["low", "high"]})
+def test_supports_heatercooler_non_numeric_features_is_false(
+    bad_features: object,
+) -> None:
+    """A malformed supported_features returns False, never raises."""
+    state = _state(
+        **{ATTR_SUPPORTED_FEATURES: bad_features, ATTR_FAN_MODES: ["low", "high"]}
+    )
     assert supports_heatercooler(state) is False
 
 
@@ -94,10 +102,15 @@ def test_get_accessory_params_uninspectable_returns_empty() -> None:
 
 def test_real_get_accessory_matches_expected_signature() -> None:
     """Canary: fail loudly if Home Assistant changes the get_accessory signature."""
-    assert _get_accessory_params(homekit_accessories.get_accessory) == EXPECTED_GET_ACCESSORY_PARAMS
+    assert (
+        _get_accessory_params(homekit_accessories.get_accessory)
+        == EXPECTED_GET_ACCESSORY_PARAMS
+    )
 
 
-async def test_patch_routes_included_climate_and_restores(hass: HomeAssistant, hk_driver: object) -> None:
+async def test_patch_routes_included_climate_and_restores(
+    hass: HomeAssistant, hk_driver: object
+) -> None:
     set_climate(hass, HVACMode.COOL, **{ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF]})
     original = homekit_accessories.get_accessory
     original_module = homekit_module.get_accessory
@@ -118,7 +131,9 @@ async def test_patch_routes_included_climate_and_restores(hass: HomeAssistant, h
     assert homekit_module.get_accessory is original_module
 
 
-async def test_patch_skips_unconfigured_entities(hass: HomeAssistant, hk_driver: object) -> None:
+async def test_patch_skips_unconfigured_entities(
+    hass: HomeAssistant, hk_driver: object
+) -> None:
     """Only entities in the include set become HeaterCooler; others fall through."""
     set_climate(hass, HVACMode.COOL, **{ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF]})
     hass.states.async_set(
@@ -132,35 +147,55 @@ async def test_patch_skips_unconfigured_entities(hass: HomeAssistant, hk_driver:
     )
     apply_patch(hass, {ENTITY_ID}, set())
     try:
-        included = homekit_accessories.get_accessory(hass, hk_driver, hass.states.get(ENTITY_ID), 2, {})
-        other = homekit_accessories.get_accessory(hass, hk_driver, hass.states.get("climate.other"), 3, {})
+        included = homekit_accessories.get_accessory(
+            hass, hk_driver, hass.states.get(ENTITY_ID), 2, {}
+        )
+        other = homekit_accessories.get_accessory(
+            hass, hk_driver, hass.states.get("climate.other"), 3, {}
+        )
         assert type(included).__name__ == "HeaterCooler"
         assert type(other).__name__ == "Thermostat"
     finally:
         remove_patch(hass)
 
 
-async def test_patch_threads_configured_fan_lane(hass: HomeAssistant, hk_driver: object) -> None:
+async def test_patch_threads_configured_fan_lane(
+    hass: HomeAssistant, hk_driver: object
+) -> None:
     """The fan lane chosen at apply time reaches the HeaterCooler accessory."""
     set_climate(
         hass,
         HVACMode.COOL,
-        **{ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF], ATTR_FAN_MODES: SEVEN_FAN_MODES},
+        **{
+            ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF],
+            ATTR_FAN_MODES: SEVEN_FAN_MODES,
+        },
     )
     apply_patch(hass, {ENTITY_ID}, set(), fan_lane=FAN_LANE_MANUAL)
     try:
-        accessory = homekit_accessories.get_accessory(hass, hk_driver, hass.states.get(ENTITY_ID), 2, {})
+        accessory = homekit_accessories.get_accessory(
+            hass, hk_driver, hass.states.get(ENTITY_ID), 2, {}
+        )
         # The manual lane must win; the default auto lane would yield the /auto trio.
         assert accessory.ordered_fan_speeds == ["low", "mid", "high"]
     finally:
         remove_patch(hass)
 
 
-async def test_apply_patch_no_op_on_signature_drift(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -> None:
+async def test_apply_patch_no_op_on_signature_drift(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
     """A drifted HomeKit get_accessory signature must leave HomeKit untouched."""
     set_climate(hass, HVACMode.COOL, **{ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF]})
 
-    def _drifted(hass: object, driver: object, state: object, aid: object, config: object, extra: object) -> None:
+    def _drifted(
+        hass: object,
+        driver: object,
+        state: object,
+        aid: object,
+        config: object,
+        extra: object,
+    ) -> None:
         return None
 
     with patch.object(homekit_accessories, "get_accessory", _drifted):
@@ -171,7 +206,8 @@ async def test_apply_patch_no_op_on_signature_drift(hass: HomeAssistant, caplog:
         assert homekit_accessories.get_accessory is _drifted
         assert DATA_PATCH_STATE not in hass.data.get(DOMAIN, {})
     assert any(
-        record.levelno >= logging.WARNING and "signature changed" in record.getMessage() for record in caplog.records
+        record.levelno >= logging.WARNING and "signature changed" in record.getMessage()
+        for record in caplog.records
     )
 
 
@@ -193,7 +229,8 @@ async def test_patch_falls_back_to_default_on_error(
         assert type(accessory).__name__ == "Thermostat"
         # The failure must be surfaced, not swallowed silently.
         assert any(
-            record.levelno >= logging.ERROR and "HeaterCooler mapping failed" in record.getMessage()
+            record.levelno >= logging.ERROR
+            and "HeaterCooler mapping failed" in record.getMessage()
             for record in caplog.records
         )
     finally:

@@ -19,14 +19,18 @@ async def test_sensor_reports_patch_diagnostics(hass: HomeAssistant) -> None:
     # climate.missing is intentionally never registered so it lands in missing_entities.
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={CONF_INCLUDE_ENTITIES: [ENTITY_ID, "sensor.not_climate", "climate.missing"]},
+        data={
+            CONF_INCLUDE_ENTITIES: [ENTITY_ID, "sensor.not_climate", "climate.missing"]
+        },
     )
     entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    entity_id = er.async_get(hass).async_get_entity_id("sensor", DOMAIN, f"{entry.entry_id}_patched_entities")
+    entity_id = er.async_get(hass).async_get_entity_id(
+        "sensor", DOMAIN, f"{entry.entry_id}_patched_entities"
+    )
     assert entity_id
     state = hass.states.get(entity_id)
     assert state is not None

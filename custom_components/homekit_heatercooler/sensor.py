@@ -52,7 +52,9 @@ class HomeKitHeaterCoolerPatchedEntitiesSensor(SensorEntity):
             "exclude_entities": status.get("exclude_entities", []),
             "target_entities": status.get("target_entities", []),
             "patched_entities": status.get("patched_entities", []),
-            "currently_patchable_entities": status.get("currently_patchable_entities", []),
+            "currently_patchable_entities": status.get(
+                "currently_patchable_entities", []
+            ),
             "missing_entities": status.get("missing_entities", []),
             "unsupported_entities": status.get("unsupported_entities", []),
             "non_climate_entities": status.get("non_climate_entities", []),

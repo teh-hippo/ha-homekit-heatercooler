@@ -8,7 +8,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entityfilter import CONF_INCLUDE_ENTITIES
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.homekit_heatercooler.const import DATA_PATCH_STATE, DATA_PATCH_STATUS, DOMAIN
+from custom_components.homekit_heatercooler.const import (
+    DATA_PATCH_STATE,
+    DATA_PATCH_STATUS,
+    DOMAIN,
+)
 from tests.common import ENTITY_ID, set_climate
 
 
@@ -27,7 +31,9 @@ async def test_setup_and_unload_installs_and_removes_patch(hass: HomeAssistant) 
     assert DATA_PATCH_STATE not in hass.data.get(DOMAIN, {})
 
 
-async def test_setup_without_targets_does_not_install_patch(hass: HomeAssistant) -> None:
+async def test_setup_without_targets_does_not_install_patch(
+    hass: HomeAssistant,
+) -> None:
     """An entry with no include entities leaves HomeKit untouched."""
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_INCLUDE_ENTITIES: []})
     entry.add_to_hass(hass)
@@ -38,7 +44,7 @@ async def test_setup_without_targets_does_not_install_patch(hass: HomeAssistant)
 
 
 async def test_setup_survives_malformed_target_entity(hass: HomeAssistant) -> None:
-    """A target entity with a malformed supported_features must not break setup or diagnostics."""
+    """A malformed supported_features must not break setup or diagnostics."""
     hass.states.async_set(
         "climate.broken",
         HVACMode.COOL,
@@ -48,7 +54,9 @@ async def test_setup_survives_malformed_target_entity(hass: HomeAssistant) -> No
             ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF],
         },
     )
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_INCLUDE_ENTITIES: ["climate.broken"]})
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_INCLUDE_ENTITIES: ["climate.broken"]}
+    )
     entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(entry.entry_id)

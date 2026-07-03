@@ -65,7 +65,9 @@ def test_plan_power_on_noop_when_already_active() -> None:
 
 
 def test_plan_target_mode_sets_and_records() -> None:
-    calls, last = plan_active_mode_change(1, HC_TARGET_HEAT, True, AUTO_MAP, HVACMode.COOL)
+    calls, last = plan_active_mode_change(
+        1, HC_TARGET_HEAT, True, AUTO_MAP, HVACMode.COOL
+    )
     assert calls == [(SERVICE_SET_HVAC_MODE, {ATTR_HVAC_MODE: HVACMode.HEAT})]
     assert last == HVACMode.HEAT
 
@@ -87,11 +89,15 @@ def test_plan_active_one_with_unknown_target_uses_last_known_mode() -> None:
 
 def test_plan_active_non_finite_target_does_not_raise() -> None:
     # A NaN/inf TargetHeaterCoolerState write must be ignored, not crash int().
-    calls, last = plan_active_mode_change(None, float("nan"), True, AUTO_MAP, HVACMode.COOL)
+    calls, last = plan_active_mode_change(
+        None, float("nan"), True, AUTO_MAP, HVACMode.COOL
+    )
     assert calls == []
     assert last == HVACMode.COOL
     # A coincident Active=1 power-on still falls back to the last known mode.
-    calls, last = plan_active_mode_change(1, float("inf"), False, AUTO_MAP, HVACMode.HEAT)
+    calls, last = plan_active_mode_change(
+        1, float("inf"), False, AUTO_MAP, HVACMode.HEAT
+    )
     assert calls == [(SERVICE_SET_HVAC_MODE, {ATTR_HVAC_MODE: HVACMode.HEAT})]
     assert last == HVACMode.HEAT
 
@@ -181,7 +187,7 @@ def test_swing_is_enabled() -> None:
     assert swing_is_enabled("on") is True
     assert swing_is_enabled("off") is False
     assert swing_is_enabled(None) is False
-    # A non-off vendor mode reads as enabled, and against a mode list only when declared.
+    # A non-off vendor mode reads as enabled, but only when it is declared.
     assert swing_is_enabled("quiet") is True
     assert swing_is_enabled("quiet", ["off", "quiet"]) is True
     assert swing_is_enabled("quiet", ["off", "loud"]) is False
@@ -197,19 +203,42 @@ def test_current_heater_cooler_state() -> None:
     assert current_heater_cooler_state("cool", None) == HC_IDLE
     # A stale action must not make an off/unavailable entity look active.
     assert current_heater_cooler_state("off", HVACAction.HEATING) == HC_INACTIVE
-    assert current_heater_cooler_state(STATE_UNAVAILABLE, HVACAction.COOLING) == HC_INACTIVE
+    assert (
+        current_heater_cooler_state(STATE_UNAVAILABLE, HVACAction.COOLING)
+        == HC_INACTIVE
+    )
     assert current_heater_cooler_state("cool", "bogus") == HC_INACTIVE
 
 
 def test_initial_last_known_mode() -> None:
     # A live non-off mode is kept as the power-on mode.
-    assert _initial_last_known_mode(HVACMode.HEAT, [HVACMode.COOL, HVACMode.HEAT, HVACMode.OFF]) == HVACMode.HEAT
+    assert (
+        _initial_last_known_mode(
+            HVACMode.HEAT, [HVACMode.COOL, HVACMode.HEAT, HVACMode.OFF]
+        )
+        == HVACMode.HEAT
+    )
     # From off/unknown, fall back to a supported direction, preferring Cool then Heat.
-    assert _initial_last_known_mode(None, [HVACMode.HEAT, HVACMode.OFF]) == HVACMode.HEAT
-    assert _initial_last_known_mode(HVACMode.OFF, [HVACMode.COOL, HVACMode.HEAT, HVACMode.OFF]) == HVACMode.COOL
-    assert _initial_last_known_mode(None, [HVACMode.HEAT_COOL, HVACMode.OFF]) == HVACMode.HEAT_COOL
-    assert _initial_last_known_mode(None, [HVACMode.AUTO, HVACMode.OFF]) == HVACMode.AUTO
-    assert _initial_last_known_mode(None, [HVACMode.FAN_ONLY, HVACMode.OFF]) == HVACMode.FAN_ONLY
+    assert (
+        _initial_last_known_mode(None, [HVACMode.HEAT, HVACMode.OFF]) == HVACMode.HEAT
+    )
+    assert (
+        _initial_last_known_mode(
+            HVACMode.OFF, [HVACMode.COOL, HVACMode.HEAT, HVACMode.OFF]
+        )
+        == HVACMode.COOL
+    )
+    assert (
+        _initial_last_known_mode(None, [HVACMode.HEAT_COOL, HVACMode.OFF])
+        == HVACMode.HEAT_COOL
+    )
+    assert (
+        _initial_last_known_mode(None, [HVACMode.AUTO, HVACMode.OFF]) == HVACMode.AUTO
+    )
+    assert (
+        _initial_last_known_mode(None, [HVACMode.FAN_ONLY, HVACMode.OFF])
+        == HVACMode.FAN_ONLY
+    )
     assert _initial_last_known_mode(None, [HVACMode.OFF]) == HVACMode.COOL
     assert _initial_last_known_mode(None, []) == HVACMode.COOL
 
@@ -245,7 +274,10 @@ def test_build_fan_speed_map_lanes_and_fallback() -> None:
 
 
 def test_temperature_range_normal_celsius() -> None:
-    assert temperature_range({ATTR_MIN_TEMP: 18, ATTR_MAX_TEMP: 30}, "°C") == (18.0, 30.0)
+    assert temperature_range({ATTR_MIN_TEMP: 18, ATTR_MAX_TEMP: 30}, "°C") == (
+        18.0,
+        30.0,
+    )
 
 
 def test_temperature_range_defaults_when_missing() -> None:
@@ -254,16 +286,25 @@ def test_temperature_range_defaults_when_missing() -> None:
 
 def test_temperature_range_rounds_to_half_degree() -> None:
     # 62 °F -> 16.6667 °C rounds to 16.5; 89 °F -> 31.6667 °C rounds to 31.5.
-    assert temperature_range({ATTR_MIN_TEMP: 62, ATTR_MAX_TEMP: 89}, "°F") == (16.5, 31.5)
+    assert temperature_range({ATTR_MIN_TEMP: 62, ATTR_MAX_TEMP: 89}, "°F") == (
+        16.5,
+        31.5,
+    )
 
 
 def test_temperature_range_fixes_reversed_bounds() -> None:
-    assert temperature_range({ATTR_MIN_TEMP: 30, ATTR_MAX_TEMP: 18}, "°C") == (18.0, 30.0)
+    assert temperature_range({ATTR_MIN_TEMP: 30, ATTR_MAX_TEMP: 18}, "°C") == (
+        18.0,
+        30.0,
+    )
 
 
 def test_temperature_range_clamps_negative_floor() -> None:
     # A negative lower bound crashes the iOS Home app, so it is clamped to zero.
-    assert temperature_range({ATTR_MIN_TEMP: -5, ATTR_MAX_TEMP: 25}, "°C") == (0.0, 25.0)
+    assert temperature_range({ATTR_MIN_TEMP: -5, ATTR_MAX_TEMP: 25}, "°C") == (
+        0.0,
+        25.0,
+    )
 
 
 def test_temperature_range_preserves_zero_bound() -> None:
@@ -273,13 +314,20 @@ def test_temperature_range_preserves_zero_bound() -> None:
 
 def test_temperature_range_ignores_non_numeric_bounds() -> None:
     # A malformed bound falls back to the default instead of raising.
-    assert temperature_range({ATTR_MIN_TEMP: "unknown", ATTR_MAX_TEMP: None}, "°C") == (7.0, 35.0)
+    assert temperature_range({ATTR_MIN_TEMP: "unknown", ATTR_MAX_TEMP: None}, "°C") == (
+        7.0,
+        35.0,
+    )
 
 
 def test_temperature_range_ignores_non_finite_bounds() -> None:
     # NaN/inf bounds must not reach round(); they fall back to the defaults.
-    assert temperature_range({ATTR_MIN_TEMP: float("nan"), ATTR_MAX_TEMP: 30}, "°C") == (7.0, 30.0)
-    assert temperature_range({ATTR_MIN_TEMP: 18, ATTR_MAX_TEMP: float("inf")}, "°C") == (18.0, 35.0)
+    assert temperature_range(
+        {ATTR_MIN_TEMP: float("nan"), ATTR_MAX_TEMP: 30}, "°C"
+    ) == (7.0, 30.0)
+    assert temperature_range(
+        {ATTR_MIN_TEMP: 18, ATTR_MAX_TEMP: float("inf")}, "°C"
+    ) == (18.0, 35.0)
 
 
 def test_hk_temperature_ignores_non_finite() -> None:
@@ -291,9 +339,18 @@ def test_hk_temperature_ignores_non_finite() -> None:
 
 def test_build_target_state_map_prefers_heat_cool_for_auto() -> None:
     # HomeKit Auto resolves to HEAT_COOL when the entity supports both.
-    assert build_target_state_map(True, True, False, False)[HC_TARGET_AUTO] == HVACMode.HEAT_COOL
-    assert build_target_state_map(False, True, False, False)[HC_TARGET_AUTO] == HVACMode.HEAT_COOL
-    assert build_target_state_map(True, False, False, False)[HC_TARGET_AUTO] == HVACMode.AUTO
+    assert (
+        build_target_state_map(True, True, False, False)[HC_TARGET_AUTO]
+        == HVACMode.HEAT_COOL
+    )
+    assert (
+        build_target_state_map(False, True, False, False)[HC_TARGET_AUTO]
+        == HVACMode.HEAT_COOL
+    )
+    assert (
+        build_target_state_map(True, False, False, False)[HC_TARGET_AUTO]
+        == HVACMode.AUTO
+    )
 
 
 def test_resolve_dual_setpoints_passthrough_within_range() -> None:

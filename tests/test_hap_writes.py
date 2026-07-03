@@ -33,7 +33,9 @@ from custom_components.homekit_heatercooler.type_heatercooler import HeaterCoole
 from tests.common import ENTITY_ID, set_climate
 
 
-async def _create_accessory(hass: HomeAssistant, hk_driver: HomeDriver, config: dict | None = None) -> HeaterCooler:
+async def _create_accessory(
+    hass: HomeAssistant, hk_driver: HomeDriver, config: dict | None = None
+) -> HeaterCooler:
     """Build a HeaterCooler accessory wired to the driver and running."""
     acc = HeaterCooler(hass, hk_driver, "Test", ENTITY_ID, 1, config or {})
     hk_driver.add_accessory(acc)
@@ -42,7 +44,9 @@ async def _create_accessory(hass: HomeAssistant, hk_driver: HomeDriver, config: 
     return acc
 
 
-def _write_char(hk_driver: HomeDriver, acc: HeaterCooler, char: object, value: object) -> None:
+def _write_char(
+    hk_driver: HomeDriver, acc: HeaterCooler, char: object, value: object
+) -> None:
     """Simulate a HomeKit write to a single characteristic through the driver."""
     hk_driver.set_characteristics(
         {
@@ -58,7 +62,9 @@ def _write_char(hk_driver: HomeDriver, acc: HeaterCooler, char: object, value: o
     )
 
 
-async def test_active_zero_turns_off_via_hap(hass: HomeAssistant, hk_driver: HomeDriver) -> None:
+async def test_active_zero_turns_off_via_hap(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
     """Writing Active=0 through HomeKit turns the entity off."""
     set_climate(hass, HVACMode.COOL, **{ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF]})
     await hass.async_block_till_done()
@@ -72,9 +78,15 @@ async def test_active_zero_turns_off_via_hap(hass: HomeAssistant, hk_driver: Hom
     assert call_turn_off[0].data[ATTR_ENTITY_ID] == ENTITY_ID
 
 
-async def test_active_one_powers_on_with_last_mode_via_hap(hass: HomeAssistant, hk_driver: HomeDriver) -> None:
+async def test_active_one_powers_on_with_last_mode_via_hap(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
     """Writing Active=1 from off restores the last known mode."""
-    set_climate(hass, HVACMode.OFF, **{ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.HEAT, HVACMode.OFF]})
+    set_climate(
+        hass,
+        HVACMode.OFF,
+        **{ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.HEAT, HVACMode.OFF]},
+    )
     await hass.async_block_till_done()
     acc = await _create_accessory(hass, hk_driver)
 
@@ -86,9 +98,15 @@ async def test_active_one_powers_on_with_last_mode_via_hap(hass: HomeAssistant, 
     assert call_set_hvac_mode[0].data[ATTR_HVAC_MODE] == acc._last_known_mode
 
 
-async def test_target_state_write_sets_hvac_mode_via_hap(hass: HomeAssistant, hk_driver: HomeDriver) -> None:
+async def test_target_state_write_sets_hvac_mode_via_hap(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
     """Writing TargetHeaterCoolerState drives set_hvac_mode."""
-    set_climate(hass, HVACMode.COOL, **{ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.HEAT, HVACMode.OFF]})
+    set_climate(
+        hass,
+        HVACMode.COOL,
+        **{ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.HEAT, HVACMode.OFF]},
+    )
     await hass.async_block_till_done()
     acc = await _create_accessory(hass, hk_driver)
 
@@ -101,13 +119,21 @@ async def test_target_state_write_sets_hvac_mode_via_hap(hass: HomeAssistant, hk
     assert acc._last_known_mode == HVACMode.HEAT
 
 
-async def test_single_setpoint_write_via_hap(hass: HomeAssistant, hk_driver: HomeDriver) -> None:
+async def test_single_setpoint_write_via_hap(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
     """A threshold write on a single-setpoint entity sends a plain temperature."""
-    set_climate(hass, HVACMode.COOL, **{ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF], ATTR_TEMPERATURE: 22})
+    set_climate(
+        hass,
+        HVACMode.COOL,
+        **{ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF], ATTR_TEMPERATURE: 22},
+    )
     await hass.async_block_till_done()
     acc = await _create_accessory(hass, hk_driver)
 
-    call_set_temperature = async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE)
+    call_set_temperature = async_mock_service(
+        hass, CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE
+    )
     _write_char(hk_driver, acc, acc.char_cool, 25.0)
     await hass.async_block_till_done()
 
@@ -116,7 +142,9 @@ async def test_single_setpoint_write_via_hap(hass: HomeAssistant, hk_driver: Hom
     assert ATTR_TARGET_TEMP_HIGH not in call_set_temperature[0].data
 
 
-async def test_dual_setpoint_write_via_hap(hass: HomeAssistant, hk_driver: HomeDriver) -> None:
+async def test_dual_setpoint_write_via_hap(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
     """A threshold write on a range entity sends both thresholds together."""
     set_climate(
         hass,
@@ -130,7 +158,9 @@ async def test_dual_setpoint_write_via_hap(hass: HomeAssistant, hk_driver: HomeD
     await hass.async_block_till_done()
     acc = await _create_accessory(hass, hk_driver)
 
-    call_set_temperature = async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE)
+    call_set_temperature = async_mock_service(
+        hass, CLIMATE_DOMAIN, SERVICE_SET_TEMPERATURE
+    )
     _write_char(hk_driver, acc, acc.char_cool, 28.0)
     await hass.async_block_till_done()
 
@@ -140,7 +170,9 @@ async def test_dual_setpoint_write_via_hap(hass: HomeAssistant, hk_driver: HomeD
     assert data[ATTR_TARGET_TEMP_LOW] == 20.0
 
 
-async def test_fan_speed_write_via_hap(hass: HomeAssistant, hk_driver: HomeDriver) -> None:
+async def test_fan_speed_write_via_hap(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
     """The lowest slider step reaches the first ordered fan mode."""
     set_climate(hass, HVACMode.COOL, **{ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF]})
     await hass.async_block_till_done()
@@ -172,7 +204,8 @@ async def test_swing_toggle_via_hap(
         hass,
         HVACMode.COOL,
         **{
-            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.FAN_MODE | ClimateEntityFeature.SWING_MODE,
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.SWING_MODE,
             ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF],
             ATTR_FAN_MODES: ["Auto", "Low", "High"],
             ATTR_SWING_MODES: ["off", "on"],
@@ -182,7 +215,9 @@ async def test_swing_toggle_via_hap(
     await hass.async_block_till_done()
     acc = await _create_accessory(hass, hk_driver)
 
-    call_set_swing_mode = async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_SWING_MODE)
+    call_set_swing_mode = async_mock_service(
+        hass, CLIMATE_DOMAIN, SERVICE_SET_SWING_MODE
+    )
     assert acc.char_swing is not None
     _write_char(hk_driver, acc, acc.char_swing, swing_write)
     await hass.async_block_till_done()
@@ -191,7 +226,9 @@ async def test_swing_toggle_via_hap(
     assert call_set_swing_mode[0].data[ATTR_SWING_MODE] == expected_mode
 
 
-async def test_active_float_write_coerces_via_hap(hass: HomeAssistant, hk_driver: HomeDriver) -> None:
+async def test_active_float_write_coerces_via_hap(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
     """A float Active write reaches the setter as an int (pyhap uint8 coercion)."""
     set_climate(hass, HVACMode.OFF, **{ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF]})
     await hass.async_block_till_done()
@@ -201,14 +238,18 @@ async def test_active_float_write_coerces_via_hap(hass: HomeAssistant, hk_driver
     _write_char(hk_driver, acc, acc.char_active, 1.5)
     await hass.async_block_till_done()
 
-    # pyhap delivers the raw 1.5 to the service setter; the accessory coerces it to Active=1.
+    # pyhap delivers the raw 1.5; the accessory coerces it to Active=1.
     assert call_set_hvac_mode
     assert call_set_hvac_mode[0].data[ATTR_HVAC_MODE] == HVACMode.COOL
 
 
-async def test_fan_only_float_active_write_uses_last_supported_mode(hass: HomeAssistant, hk_driver: HomeDriver) -> None:
+async def test_fan_only_float_active_write_uses_last_supported_mode(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
     """A batched float Active write with an unsupported target still powers on."""
-    set_climate(hass, HVACMode.OFF, **{ATTR_HVAC_MODES: [HVACMode.OFF, HVACMode.FAN_ONLY]})
+    set_climate(
+        hass, HVACMode.OFF, **{ATTR_HVAC_MODES: [HVACMode.OFF, HVACMode.FAN_ONLY]}
+    )
     await hass.async_block_till_done()
     acc = await _create_accessory(hass, hk_driver)
 
@@ -232,7 +273,7 @@ async def test_fan_only_float_active_write_uses_last_supported_mode(hass: HomeAs
     )
     await hass.async_block_till_done()
 
-    # The coerced Active=1 must reach the fallback branch and power on the only supported mode.
+    # The coerced Active=1 must reach the fallback and power on the only mode.
     assert call_set_hvac_mode
     assert call_set_hvac_mode[0].data[ATTR_HVAC_MODE] == HVACMode.FAN_ONLY
     assert acc._last_known_mode == HVACMode.FAN_ONLY

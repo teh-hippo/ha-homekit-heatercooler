@@ -229,7 +229,11 @@ def target_state_valid_values(target_map: dict[int, HVACMode]) -> dict[str, int]
     """Return the HomeKit valid_values for TargetHeaterCoolerState."""
     return {
         name: value
-        for name, value in (("Auto", HC_TARGET_AUTO), ("Heat", HC_TARGET_HEAT), ("Cool", HC_TARGET_COOL))
+        for name, value in (
+            ("Auto", HC_TARGET_AUTO),
+            ("Heat", HC_TARGET_HEAT),
+            ("Cool", HC_TARGET_COOL),
+        )
         if value in target_map
     }
 
@@ -263,7 +267,9 @@ def is_active(state_value: str) -> int:
     return int(state_value not in _OFF_STATES)
 
 
-def build_fan_speed_map(fan_modes: list[str], lane: str) -> tuple[dict[str, str], list[str]]:
+def build_fan_speed_map(
+    fan_modes: list[str], lane: str
+) -> tuple[dict[str, str], list[str]]:
     """Return the lowercase->original fan map and the ordered slider keys for a lane."""
     modes = {mode.lower(): mode for mode in fan_modes}
     lane_order = AUTO_FAN_LANE if lane == FAN_LANE_AUTO else MANUAL_FAN_LANE
@@ -304,7 +310,9 @@ def percentage_for_fan_mode(
     return None
 
 
-def resolve_swing_mode(swing_enabled: bool, swing_modes: list[str], swing_on_mode: str) -> str | None:
+def resolve_swing_mode(
+    swing_enabled: bool, swing_modes: list[str], swing_on_mode: str
+) -> str | None:
     """Return the climate swing_mode string for a HomeKit swing toggle."""
     if swing_enabled:
         return swing_on_mode
@@ -321,7 +329,9 @@ def swing_is_off(swing_mode: str | None) -> bool:
     return str(swing_mode or "").lower() in SWING_OFF_SET
 
 
-def swing_is_enabled(swing_mode: str | None, swing_modes: Iterable[str] | None = None) -> bool:
+def swing_is_enabled(
+    swing_mode: str | None, swing_modes: Iterable[str] | None = None
+) -> bool:
     """Return True when a swing mode should read as enabled in HomeKit.
 
     A recognised on token is enabled and an off token is not; any other
@@ -350,7 +360,9 @@ def select_single_setpoint(
         return heating_temp
     if mode == HVACMode.HEAT_COOL:
         if cooling_temp is not None and heating_temp is not None:
-            if current_target is not None and abs(cooling_temp - current_target) > abs(heating_temp - current_target):
+            if current_target is not None and abs(cooling_temp - current_target) > abs(
+                heating_temp - current_target
+            ):
                 return cooling_temp
             return heating_temp
         if cooling_temp is not None:

@@ -47,14 +47,25 @@ def supports_heatercooler(state: State) -> bool:
     """Return True if a climate entity has capabilities suited to HeaterCooler."""
     features_value = as_float(state.attributes.get(ATTR_SUPPORTED_FEATURES, 0))
     features = int(features_value) if features_value is not None else 0
-    supports_fan_or_swing = bool(features & ClimateEntityFeature.FAN_MODE or features & ClimateEntityFeature.SWING_MODE)
-    has_modes = bool(state.attributes.get(ATTR_FAN_MODES) or state.attributes.get(ATTR_SWING_MODES))
+    supports_fan_or_swing = bool(
+        features & ClimateEntityFeature.FAN_MODE
+        or features & ClimateEntityFeature.SWING_MODE
+    )
+    has_modes = bool(
+        state.attributes.get(ATTR_FAN_MODES) or state.attributes.get(ATTR_SWING_MODES)
+    )
     return supports_fan_or_swing and has_modes
 
 
-def _should_patch_entity(entity_id: str, include_entities: set[str], exclude_entities: set[str]) -> bool:
+def _should_patch_entity(
+    entity_id: str, include_entities: set[str], exclude_entities: set[str]
+) -> bool:
     """Return True when this entity should be redirected to HeaterCooler."""
-    return bool(include_entities) and entity_id in include_entities and entity_id not in exclude_entities
+    return (
+        bool(include_entities)
+        and entity_id in include_entities
+        and entity_id not in exclude_entities
+    )
 
 
 def _get_accessory_params(func: Callable[..., Any]) -> tuple[str, ...]:
@@ -74,7 +85,9 @@ def apply_patch(
     """Patch HomeKit get_accessory to expose selected climates as HeaterCooler."""
     register_heatercooler_type()
     if "HeaterCooler" not in homekit_accessories.TYPES:
-        _LOGGER.error("HeaterCooler accessory type is not registered; leaving HomeKit untouched")
+        _LOGGER.error(
+            "HeaterCooler accessory type is not registered; leaving HomeKit untouched"
+        )
         return
 
     domain_data = hass.data.setdefault(DOMAIN, {})
@@ -124,10 +137,13 @@ def apply_patch(
             ):
                 name = config.get(CONF_NAME, state.name)
                 hc_config = {**config, CONF_FAN_LANE: patch_state.fan_lane}
-                return homekit_accessories.TYPES["HeaterCooler"](hass, driver, name, state.entity_id, aid, hc_config)
+                return homekit_accessories.TYPES["HeaterCooler"](
+                    hass, driver, name, state.entity_id, aid, hc_config
+                )
         except Exception:
             _LOGGER.exception(
-                "HeaterCooler mapping failed for %s; falling back to the default accessory",
+                "HeaterCooler mapping failed for %s; falling back to the "
+                "default accessory",
                 state.entity_id,
             )
 

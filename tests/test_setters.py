@@ -48,8 +48,14 @@ async def test_active_zero_turns_off(hass: HomeAssistant, hk_driver: object) -> 
     assert mock_call.call_args_list[0][0][1] == "turn_off"
 
 
-async def test_single_setpoint_temperature_write(hass: HomeAssistant, hk_driver: object) -> None:
-    set_climate(hass, HVACMode.COOL, **{ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF], ATTR_TEMPERATURE: 22})
+async def test_single_setpoint_temperature_write(
+    hass: HomeAssistant, hk_driver: object
+) -> None:
+    set_climate(
+        hass,
+        HVACMode.COOL,
+        **{ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF], ATTR_TEMPERATURE: 22},
+    )
     acc = _accessory(hass, hk_driver)
     with patch.object(acc, "async_call_service") as mock_call:
         acc._set_chars({CHAR_COOLING_THRESHOLD_TEMPERATURE: 25.0})
@@ -60,8 +66,10 @@ async def test_single_setpoint_temperature_write(hass: HomeAssistant, hk_driver:
     assert ATTR_TARGET_TEMP_LOW not in data
 
 
-async def test_dual_setpoint_write_sends_both_thresholds(hass: HomeAssistant, hk_driver: object) -> None:
-    # A range entity requires both thresholds together; a single write must still send both.
+async def test_dual_setpoint_write_sends_both_thresholds(
+    hass: HomeAssistant, hk_driver: object
+) -> None:
+    # A range entity needs both thresholds; a single write must send both.
     set_climate(
         hass,
         HVACMode.HEAT_COOL,
@@ -79,7 +87,9 @@ async def test_dual_setpoint_write_sends_both_thresholds(hass: HomeAssistant, hk
     assert data[ATTR_TARGET_TEMP_LOW] == 20.0
 
 
-async def test_fahrenheit_single_setpoint_tie_break_uses_homekit_units(hass: HomeAssistant, hk_driver: object) -> None:
+async def test_fahrenheit_single_setpoint_tie_break_uses_homekit_units(
+    hass: HomeAssistant, hk_driver: object
+) -> None:
     # In Fahrenheit, the moved-threshold tie-break must compare values in HomeKit units.
     hass.config.units = US_CUSTOMARY_SYSTEM
     set_climate(
@@ -94,12 +104,19 @@ async def test_fahrenheit_single_setpoint_tie_break_uses_homekit_units(hass: Hom
     )
     acc = _accessory(hass, hk_driver)
     with patch.object(acc, "async_call_service") as mock_call:
-        acc._set_chars({CHAR_COOLING_THRESHOLD_TEMPERATURE: 25.0, CHAR_HEATING_THRESHOLD_TEMPERATURE: 22.0})
+        acc._set_chars(
+            {
+                CHAR_COOLING_THRESHOLD_TEMPERATURE: 25.0,
+                CHAR_HEATING_THRESHOLD_TEMPERATURE: 22.0,
+            }
+        )
     data = mock_call.call_args[0][2]
     assert data[ATTR_TEMPERATURE] == pytest.approx(77.0)
 
 
-async def test_update_state_reflects_cooling_action(hass: HomeAssistant, hk_driver: object) -> None:
+async def test_update_state_reflects_cooling_action(
+    hass: HomeAssistant, hk_driver: object
+) -> None:
     set_climate(
         hass,
         HVACMode.COOL,
@@ -113,7 +130,9 @@ async def test_update_state_reflects_cooling_action(hass: HomeAssistant, hk_driv
     assert acc.char_current_state.value == HC_COOLING
 
 
-async def test_update_state_dry_mode_is_on_and_idle(hass: HomeAssistant, hk_driver: object) -> None:
+async def test_update_state_dry_mode_is_on_and_idle(
+    hass: HomeAssistant, hk_driver: object
+) -> None:
     """The real daikin reports no action in dry, so HomeKit shows On and Idle."""
     set_climate(
         hass,
@@ -140,7 +159,8 @@ async def test_swing_mode_toggle_on(hass: HomeAssistant, hk_driver: object) -> N
         hass,
         HVACMode.COOL,
         **{
-            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.FAN_MODE | ClimateEntityFeature.SWING_MODE,
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.SWING_MODE,
             ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF],
             ATTR_SWING_MODES: ["off", "on"],
             ATTR_SWING_MODE: "off",
@@ -154,9 +174,15 @@ async def test_swing_mode_toggle_on(hass: HomeAssistant, hk_driver: object) -> N
 
 
 @pytest.mark.parametrize("bad", [float("nan"), float("inf"), "nope"])
-async def test_non_finite_temperature_write_is_noop(hass: HomeAssistant, hk_driver: object, bad: object) -> None:
-    """A NaN/inf threshold write must be ignored, never sent as a set_temperature value."""
-    set_climate(hass, HVACMode.COOL, **{ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF], ATTR_TEMPERATURE: 22})
+async def test_non_finite_temperature_write_is_noop(
+    hass: HomeAssistant, hk_driver: object, bad: object
+) -> None:
+    """A NaN/inf threshold write must be ignored, never sent onward."""
+    set_climate(
+        hass,
+        HVACMode.COOL,
+        **{ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF], ATTR_TEMPERATURE: 22},
+    )
     acc = _accessory(hass, hk_driver)
     with patch.object(acc, "async_call_service") as mock_call:
         acc._set_chars({CHAR_COOLING_THRESHOLD_TEMPERATURE: bad})
@@ -164,7 +190,9 @@ async def test_non_finite_temperature_write_is_noop(hass: HomeAssistant, hk_driv
 
 
 @pytest.mark.parametrize("bad", [float("nan"), float("inf")])
-async def test_non_finite_fan_speed_write_is_noop(hass: HomeAssistant, hk_driver: object, bad: object) -> None:
+async def test_non_finite_fan_speed_write_is_noop(
+    hass: HomeAssistant, hk_driver: object, bad: object
+) -> None:
     """A NaN/inf rotation-speed write must be ignored, never crash int()."""
     set_climate(hass, HVACMode.COOL, **{ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF]})
     acc = _accessory(hass, hk_driver)
@@ -174,13 +202,16 @@ async def test_non_finite_fan_speed_write_is_noop(hass: HomeAssistant, hk_driver
 
 
 @pytest.mark.parametrize("bad", [float("nan"), float("inf")])
-async def test_non_finite_swing_write_is_noop(hass: HomeAssistant, hk_driver: object, bad: object) -> None:
+async def test_non_finite_swing_write_is_noop(
+    hass: HomeAssistant, hk_driver: object, bad: object
+) -> None:
     """A NaN/inf swing write must be ignored, never crash int()."""
     set_climate(
         hass,
         HVACMode.COOL,
         **{
-            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.FAN_MODE | ClimateEntityFeature.SWING_MODE,
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.SWING_MODE,
             ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF],
             ATTR_SWING_MODES: ["off", "on"],
             ATTR_SWING_MODE: "off",

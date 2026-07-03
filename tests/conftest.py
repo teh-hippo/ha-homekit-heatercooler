@@ -25,7 +25,9 @@ def iid_storage(hass: HomeAssistant) -> Generator[AccessoryIIDStorage]:
 
 
 @pytest.fixture
-def hk_driver(hass: HomeAssistant, iid_storage: AccessoryIIDStorage) -> Generator[HomeDriver]:
+def hk_driver(
+    hass: HomeAssistant, iid_storage: AccessoryIIDStorage
+) -> Generator[HomeDriver]:
     """Return a HomeDriver suitable for constructing accessories in tests."""
     with (
         patch("pyhap.accessory_driver.AsyncZeroconf"),
