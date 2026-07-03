@@ -1,12 +1,8 @@
-"""HomeKit HeaterCooler accessory implementation for climate entities."""
-
-from __future__ import annotations
+"""Class to hold all heater cooler accessories."""
 
 from collections.abc import Iterable
-import logging
-from typing import Any
+from typing import Any, override
 
-from pyhap.characteristic import Characteristic
 from pyhap.const import CATEGORY_THERMOSTAT
 
 from homeassistant.components.climate import (
@@ -32,7 +28,6 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.components.homekit import const as homekit_const
 from homeassistant.components.homekit.accessories import TYPES, HomeAccessory
 from homeassistant.components.homekit.util import temperature_to_states
 from homeassistant.const import (
@@ -69,30 +64,28 @@ from .climate_util import (
     target_state_valid_values,
     temperature_range,
 )
-from .const import CONF_FAN_LANE, DEFAULT_FAN_LANE
-
-_LOGGER = logging.getLogger(__name__)
-
-CHAR_ACTIVE = homekit_const.CHAR_ACTIVE
-CHAR_COOLING_THRESHOLD_TEMPERATURE = homekit_const.CHAR_COOLING_THRESHOLD_TEMPERATURE
-CHAR_CURRENT_TEMPERATURE = homekit_const.CHAR_CURRENT_TEMPERATURE
-CHAR_HEATING_THRESHOLD_TEMPERATURE = homekit_const.CHAR_HEATING_THRESHOLD_TEMPERATURE
-CHAR_ROTATION_SPEED = homekit_const.CHAR_ROTATION_SPEED
-CHAR_SWING_MODE = homekit_const.CHAR_SWING_MODE
-PROP_MAX_VALUE = homekit_const.PROP_MAX_VALUE
-PROP_MIN_STEP = homekit_const.PROP_MIN_STEP
-PROP_MIN_VALUE = homekit_const.PROP_MIN_VALUE
-CHAR_CURRENT_HEATER_COOLER_STATE = getattr(
-    homekit_const, "CHAR_CURRENT_HEATER_COOLER_STATE", "CurrentHeaterCoolerState"
+from .const import (
+    CHAR_ACTIVE,
+    CHAR_COOLING_THRESHOLD_TEMPERATURE,
+    CHAR_CURRENT_HEATER_COOLER_STATE,
+    CHAR_CURRENT_TEMPERATURE,
+    CHAR_HEATING_THRESHOLD_TEMPERATURE,
+    CHAR_ROTATION_SPEED,
+    CHAR_SWING_MODE,
+    CHAR_TARGET_HEATER_COOLER_STATE,
+    CONF_FAN_LANE,
+    DEFAULT_FAN_LANE,
+    PROP_MAX_VALUE,
+    PROP_MIN_STEP,
+    PROP_MIN_VALUE,
+    SERV_HEATER_COOLER,
 )
-CHAR_TARGET_HEATER_COOLER_STATE = getattr(
-    homekit_const, "CHAR_TARGET_HEATER_COOLER_STATE", "TargetHeaterCoolerState"
-)
-SERV_HEATER_COOLER = getattr(homekit_const, "SERV_HEATER_COOLER", "HeaterCooler")
+
+_FAHRENHEIT_STEP_TO_CELSIUS = 5.0 / 9.0
 
 
 def _supported_hvac_modes(hvac_modes: Iterable[Any]) -> set[HVACMode]:
-    """Return the declared Home Assistant HVAC modes as parsed enums."""
+    """Return declared Home Assistant HVAC modes."""
     supported_modes: set[HVACMode] = set()
     for raw_mode in hvac_modes:
         if mode := try_parse_enum(HVACMode, raw_mode):
@@ -100,6 +93,7 @@ def _supported_hvac_modes(hvac_modes: Iterable[Any]) -> set[HVACMode]:
     return supported_modes
 
 
+@TYPES.register("HeaterCooler")
 class HeaterCooler(HomeAccessory):
     """Expose a climate entity as a native HomeKit HeaterCooler."""
 
@@ -140,7 +134,10 @@ class HeaterCooler(HomeAccessory):
             supports_cool = True
 
         self._hk_to_ha_target = build_target_state_map(
-            supports_auto, supports_heat_cool, supports_heat, supports_cool
+            supports_auto,
+            supports_heat_cool,
+            supports_heat,
+            supports_cool,
         )
 
         raw_step = attributes.get(ATTR_TARGET_TEMP_STEP, 1)
@@ -181,8 +178,7 @@ class HeaterCooler(HomeAccessory):
         if initial_target is None:
             initial_target = min(target_valid_values.values())
         self.char_target_state = service.configure_char(
-            CHAR_TARGET_HEATER_COOLER_STATE,
-            value=initial_target,
+            CHAR_TARGET_HEATER_COOLER_STATE, value=initial_target
         )
         self.char_target_state.override_properties(valid_values=target_valid_values)
         self.char_target_state.allow_invalid_client_values = True
@@ -194,7 +190,8 @@ class HeaterCooler(HomeAccessory):
 
         step_hk = self._step
         if self._unit != UnitOfTemperature.CELSIUS:
-            step_hk = self._step * 5.0 / 9.0
+            # Temperature steps are intervals, so only the scale ratio applies.
+            step_hk = self._step * _FAHRENHEIT_STEP_TO_CELSIUS
 
         temp_properties = {
             PROP_MIN_VALUE: self._min_temp,
@@ -212,7 +209,7 @@ class HeaterCooler(HomeAccessory):
             properties=temp_properties,
         )
 
-        self.char_speed: Characteristic | None = None
+        self.char_speed = None
         if self.ordered_fan_speeds:
             self.char_speed = service.configure_char(
                 CHAR_ROTATION_SPEED,
@@ -223,7 +220,7 @@ class HeaterCooler(HomeAccessory):
             )
 
         self.swing_on_mode: str | None = None
-        self.char_swing: Characteristic | None = None
+        self.char_swing = None
         if features & ClimateEntityFeature.SWING_MODE and swing_mode_names:
             self.swing_on_mode = next(
                 (mode for mode in swing_mode_names if swing_is_on(mode)),
@@ -293,7 +290,10 @@ class HeaterCooler(HomeAccessory):
                 and previous_last_known_mode in supported_modes
             ):
                 service_calls.append(
-                    (SERVICE_SET_HVAC_MODE, {ATTR_HVAC_MODE: previous_last_known_mode})
+                    (
+                        SERVICE_SET_HVAC_MODE,
+                        {ATTR_HVAC_MODE: previous_last_known_mode},
+                    )
                 )
 
     def _handle_temperature_changes(
@@ -363,12 +363,6 @@ class HeaterCooler(HomeAccessory):
         )
         if fan_mode is None:
             return
-        _LOGGER.debug(
-            "HeaterCooler %s fan speed %.2f%% -> %s",
-            self.entity_id,
-            float(speed),
-            fan_mode,
-        )
         self.async_call_service(
             CLIMATE_DOMAIN,
             SERVICE_SET_FAN_MODE,
@@ -405,6 +399,7 @@ class HeaterCooler(HomeAccessory):
         )
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update HomeKit characteristics from Home Assistant state."""
         attributes = new_state.attributes
@@ -465,14 +460,14 @@ class HeaterCooler(HomeAccessory):
     def _async_update_fan_state(self, new_state: State) -> None:
         """Update fan speed and swing characteristics from entity state."""
         attributes = new_state.attributes
-        if self.ordered_fan_speeds and self.char_speed is not None:
+        if self.ordered_fan_speeds and self.char_speed:
             percentage = percentage_for_fan_mode(
                 self.ordered_fan_speeds, self.fan_modes, attributes.get(ATTR_FAN_MODE)
             )
             if percentage is not None:
                 self.char_speed.set_value(percentage)
 
-        if self.char_swing is not None:
+        if self.char_swing:
             self.char_swing.set_value(
                 1
                 if swing_is_enabled(
@@ -481,9 +476,3 @@ class HeaterCooler(HomeAccessory):
                 )
                 else 0
             )
-
-
-def register_heatercooler_type() -> None:
-    """Register HeaterCooler with HomeKit accessory registry if absent."""
-    if "HeaterCooler" not in TYPES:
-        TYPES.register("HeaterCooler")(HeaterCooler)

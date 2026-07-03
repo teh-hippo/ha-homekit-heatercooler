@@ -18,9 +18,9 @@ from homeassistant.components.homekit import accessories as homekit_accessories
 from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME
 from homeassistant.core import HomeAssistant, State
 
+from . import type_heatercooler as _type_heatercooler  # noqa: F401
 from .climate_util import as_float
 from .const import CONF_FAN_LANE, DATA_PATCH_STATE, DEFAULT_FAN_LANE, DOMAIN
-from .type_heatercooler import register_heatercooler_type
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -83,7 +83,6 @@ def apply_patch(
     fan_lane: str = DEFAULT_FAN_LANE,
 ) -> None:
     """Patch HomeKit get_accessory to expose selected climates as HeaterCooler."""
-    register_heatercooler_type()
     if "HeaterCooler" not in homekit_accessories.TYPES:
         _LOGGER.error(
             "HeaterCooler accessory type is not registered; leaving HomeKit untouched"

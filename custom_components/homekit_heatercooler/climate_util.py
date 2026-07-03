@@ -1,14 +1,7 @@
-"""Pure climate <-> HomeKit HeaterCooler mapping helpers.
-
-Driver-agnostic: nothing here touches a HomeKit accessory, driver, or
-characteristic object, so the logic can be unit-tested directly and reused by
-any HeaterCooler front end.
-"""
-
-from __future__ import annotations
+"""Pure climate to HomeKit HeaterCooler mapping helpers."""
 
 from collections.abc import Iterable, Mapping
-import math
+from math import isfinite
 from typing import Any
 
 from homeassistant.components.climate import (
@@ -41,12 +34,9 @@ from homeassistant.util.percentage import (
 
 from .const import FAN_LANE_AUTO
 
-# HomeKit CurrentHeaterCoolerState values (per HomeKit spec).
 HC_INACTIVE, HC_IDLE, HC_HEATING, HC_COOLING = range(4)
-# HomeKit TargetHeaterCoolerState values.
 HC_TARGET_AUTO, HC_TARGET_HEAT, HC_TARGET_COOL = range(3)
 
-# HomeKit RotationSpeed percentage maximum.
 HK_MAX_ROTATION_SPEED = 100
 
 HC_HASS_TO_HOMEKIT_TARGET = {
@@ -65,37 +55,27 @@ HC_HASS_TO_HOMEKIT_ACTION = {
     HVACAction.FAN: HC_IDLE,
     HVACAction.DEFROSTING: HC_HEATING,
 }
+ORDERED_AUTO_FAN_SPEEDS = ["low/auto", "mid/auto", "high/auto"]
 FAN_MID = "mid"  # Common vendor alias between LOW and MIDDLE.
 MANUAL_FAN_LANE = [FAN_LOW, FAN_MID, FAN_MIDDLE, FAN_MEDIUM, FAN_HIGH]
-AUTO_FAN_LANE = ["low/auto", "mid/auto", "high/auto"]
 SWING_ON_SET = {SWING_ON, SWING_BOTH, SWING_HORIZONTAL, SWING_VERTICAL}
 SWING_OFF_SET = {SWING_OFF, "false", "0"}
-
-# Keep the cooling/heating pair this far apart (HomeKit °C) when a write crosses them.
 HEAT_COOL_DEADBAND = 5.0
 
 _OFF_STATES = (HVACMode.OFF, STATE_UNAVAILABLE, STATE_UNKNOWN)
 
 
 def as_float(value: Any) -> float | None:
-    """Convert a HomeKit characteristic value to a finite float where possible.
-
-    Non-numeric values and the non-finite floats HomeKit clients can send
-    (NaN, ±inf) return None so callers treat them as "no usable value" rather
-    than propagating them into arithmetic or service calls.
-    """
-    if isinstance(value, (int, float)) and math.isfinite(value):
-        return float(value)
+    """Convert a HomeKit characteristic value to a finite float where possible."""
+    if isinstance(value, (int, float)):
+        float_value = float(value)
+        if isfinite(float_value):
+            return float_value
     return None
 
 
 def as_hap_integer(value: Any) -> int | None:
-    """Convert a HomeKit numeric enum value using pyhap's integer coercion.
-
-    pyhap delivers the raw client value to a service setter (a uint8 char can
-    arrive as a float), so integer-valued characteristics must be coerced here
-    before they are compared, exactly as the characteristic itself would.
-    """
+    """Convert a HomeKit numeric enum value using pyhap's integer coercion."""
     float_value = as_float(value)
     if float_value is None:
         return None
@@ -124,11 +104,7 @@ def temperature_range(
     default_min: float = DEFAULT_MIN_TEMP,
     default_max: float = DEFAULT_MAX_TEMP,
 ) -> tuple[float, float]:
-    """Return the HeaterCooler threshold min/max for a climate entity.
-
-    Round to HomeKit's half-degree grid, correct a reversed range, and clamp
-    the floor to zero (a negative bound crashes the iOS Home app).
-    """
+    """Return the HeaterCooler threshold min/max for a climate entity."""
     min_temp = _homekit_bound(attributes.get(ATTR_MIN_TEMP), unit, default_min)
     max_temp = _homekit_bound(attributes.get(ATTR_MAX_TEMP), unit, default_max)
     min_temp, max_temp = min(min_temp, max_temp), max(min_temp, max_temp)
@@ -171,12 +147,7 @@ def resolve_dual_setpoints(
     min_temp: float,
     max_temp: float,
 ) -> tuple[float | None, float | None]:
-    """Resolve HeaterCooler threshold writes into clamped high/low setpoints.
-
-    Seed each side from its current value, apply the written thresholds in
-    cooling-then-heating order, hold the pair a deadband apart when a write
-    crosses them, then clamp both into the advertised range.
-    """
+    """Resolve HeaterCooler threshold writes into clamped high/low setpoints."""
     high = current_cooling
     low = current_heating
     if cooling is not None:
@@ -202,25 +173,20 @@ def build_target_state_map(
     supports_heat: bool,
     supports_cool: bool,
 ) -> dict[int, HVACMode]:
-    """Map HomeKit HeaterCooler target states to Home Assistant HVAC modes.
-
-    Heat and Cool are offered only in the directions the entity supports, and
-    Auto only when the entity supports AUTO or HEAT_COOL, so HomeKit never
-    presents a target the entity cannot honour. Cool is the fallback when the
-    entity advertises none of these, since a HeaterCooler needs one target.
-    """
-    target_map: dict[int, HVACMode] = {}
+    """Map HomeKit HeaterCooler target states to Home Assistant HVAC modes."""
+    target_map = {}
     if supports_heat:
         target_map[HC_TARGET_HEAT] = HVACMode.HEAT
     if supports_cool:
         target_map[HC_TARGET_COOL] = HVACMode.COOL
+    # Match Thermostat: HomeKit Auto is closest to HA heat_cool when both exist.
     if supports_heat_cool:
-        # Prefer HEAT_COOL for the HomeKit Auto target: it holds a heat/cool
-        # range, matching HomeKit's heat-or-cool-to-target semantics.
         target_map[HC_TARGET_AUTO] = HVACMode.HEAT_COOL
     elif supports_auto:
         target_map[HC_TARGET_AUTO] = HVACMode.AUTO
     if not target_map:
+        # HomeKit requires at least one target value; Cool is the least-bad
+        # fallback, and target writes are filtered against hvac_modes.
         target_map[HC_TARGET_COOL] = HVACMode.COOL
     return target_map
 
@@ -254,7 +220,7 @@ def hk_target_mode(state_value: str, target_map: dict[int, HVACMode]) -> int | N
 
 
 def current_heater_cooler_state(state_value: str, action: HVACAction | None) -> int:
-    """Map hvac_action (or the off state) to a HomeKit CurrentHeaterCoolerState."""
+    """Map hvac_action or the off state to CurrentHeaterCoolerState."""
     if state_value in _OFF_STATES:
         return HC_INACTIVE
     if action:
@@ -263,16 +229,16 @@ def current_heater_cooler_state(state_value: str, action: HVACAction | None) -> 
 
 
 def is_active(state_value: str) -> int:
-    """Return the HomeKit Active value (1 unless the entity is off/unavailable)."""
+    """Return the HomeKit Active value."""
     return int(state_value not in _OFF_STATES)
 
 
 def build_fan_speed_map(
     fan_modes: list[str], lane: str
 ) -> tuple[dict[str, str], list[str]]:
-    """Return the lowercase->original fan map and the ordered slider keys for a lane."""
+    """Return the lowercase to original fan map and ordered slider keys."""
     modes = {mode.lower(): mode for mode in fan_modes}
-    lane_order = AUTO_FAN_LANE if lane == FAN_LANE_AUTO else MANUAL_FAN_LANE
+    lane_order = ORDERED_AUTO_FAN_SPEEDS if lane == FAN_LANE_AUTO else MANUAL_FAN_LANE
     ordered = [mode for mode in lane_order if mode in modes]
     return modes, ordered or [mode for mode in modes if mode != FAN_OFF]
 
@@ -332,11 +298,7 @@ def swing_is_off(swing_mode: str | None) -> bool:
 def swing_is_enabled(
     swing_mode: str | None, swing_modes: Iterable[str] | None = None
 ) -> bool:
-    """Return True when a swing mode should read as enabled in HomeKit.
-
-    A recognised on token is enabled and an off token is not; any other
-    non-empty mode is treated as enabled when it is one the entity declares.
-    """
+    """Return True when a swing mode should read as enabled in HomeKit."""
     if swing_is_on(swing_mode):
         return True
     if swing_mode is None or swing_is_off(swing_mode):
@@ -380,10 +342,7 @@ def plan_active_mode_change(
     target_map: dict[int, HVACMode],
     last_known_mode: HVACMode,
 ) -> tuple[list[tuple[str, dict[str, Any]]], HVACMode]:
-    """Plan climate service calls for Active / TargetHeaterCoolerState writes.
-
-    Returns the service calls to issue and the (possibly updated) last known mode.
-    """
+    """Plan climate service calls for Active / TargetHeaterCoolerState writes."""
     calls: list[tuple[str, dict[str, Any]]] = []
     if active is None and target_mode is None:
         return calls, last_known_mode
