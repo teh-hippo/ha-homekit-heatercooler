@@ -1,6 +1,24 @@
 # CHANGELOG
 
 
+## v1.4.0 (2026-07-03)
+
+### Bug Fixes
+
+- Mirror core Thermostat hardening in the HeaterCooler mapping
+  ([`1ace228`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/1ace228eefa9b3f3173742b9f6938fde53434861))
+
+### Features
+
+- Make climate representation choice explicit in the config UI
+  ([`520a4d1`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/520a4d1a2b4254e60b891f1563bf15262fe32058))
+
+### Testing
+
+- Expand HeaterCooler, config-flow and HAP-write coverage
+  ([`e224400`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/e2244007d7aac733f5d4a269fa603b309609a479))
+
+
 ## v1.3.1 (2026-07-02)
 
 ### Bug Fixes
