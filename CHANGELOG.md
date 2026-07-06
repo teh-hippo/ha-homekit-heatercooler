@@ -1,6 +1,36 @@
 # CHANGELOG
 
 
+## v1.4.2 (2026-07-06)
+
+### Bug Fixes
+
+- **deps**: Override PyJWT to clear transitive advisory
+  ([`8b86481`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/8b86481d789d6ba57a221321794c9dcf19a21714))
+
+### Chores
+
+- Add port_to_core.py to project shared files to core layout
+  ([`c511e16`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/c511e1682694b71ce40f4041a26ae628625043ca))
+
+- **deps**: Lock file maintenance
+  ([`f0b1071`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/f0b10715ef9d730f228778275f1d6aaf0772cd72))
+
+### Continuous Integration
+
+- Add weekly core-validation workflow and wiring patch
+  ([`31cc684`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/31cc684f932c1839462c1deb21216bfa2e839110))
+
+- Guard custom-component and core drift in validate workflow
+  ([`24fc7c8`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/24fc7c842e2faee1423b898d79aa7018bba2b5ae))
+
+- Install full core test deps in core-validation
+  ([`80ef615`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/80ef61543992c075c51c9b7a549dc63dce294eb2))
+
+- Simplify core-validation to a mechanical fold check
+  ([`3c1a4ce`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/3c1a4ce2fbddefe7edce34a4c344ca8bfbfac55b))
+
+
 ## v1.4.1 (2026-07-03)
 
 ### Bug Fixes
