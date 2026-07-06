@@ -1,6 +1,19 @@
 # CHANGELOG
 
 
+## v1.4.3 (2026-07-06)
+
+### Build System
+
+- **deps**: Pin hub reusable workflows to v2
+  ([`fa82597`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/fa82597c41e6119b32e9a9a9768989929495246e))
+
+### Chores
+
+- **renovate**: Extend base preset directly (retire weekly slot)
+  ([`bda06b7`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/bda06b78a5b6020298d88bf9ca490ade89c7eee1))
+
+
 ## v1.4.2 (2026-07-06)
 
 ### Bug Fixes
