@@ -1027,7 +1027,7 @@ dev = [
     { name = "mypy", specifier = ">=1.15" },
     { name = "pyqrcode", specifier = "==1.2.1" },
     { name = "pytest-homeassistant-custom-component", specifier = ">=0.13.316" },
-    { name = "pyturbojpeg", specifier = "==1.8.3" },
+    { name = "pyturbojpeg", specifier = "==2.4.0" },
     { name = "ruff", specifier = ">=0.13.0" },
 ]
 
@@ -2186,12 +2186,12 @@ wheels = [
 
 [[package]]
 name = "pyturbojpeg"
-version = "1.8.3"
+version = "2.4.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/f2/2b/5fc7a7f51af947708a5d75d7637e923d2d4e60f43f6a4cfe55ae1ea241a2/pyturbojpeg-1.8.3.tar.gz", hash = "sha256:c131591a3990cc57f45a8b2705d6261c25df913a19b1fe88de5e911dbe04a1d4", size = 12757, upload-time = "2026-02-17T02:32:53.192Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/aa/95/94fcf73372b327d1499c3aed5c762117349bb4a97190dbb1ec7eaf130823/pyturbojpeg-2.4.0.tar.gz", hash = "sha256:7d632be4e74c652be26bf8093501ed5784e916195735e76131def285c4d5843e", size = 33064, upload-time = "2026-06-24T15:27:15.228Z" }
 
 [[package]]
 name = "pytz"
