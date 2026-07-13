@@ -1,7 +1,7 @@
 # CHANGELOG
 
 
-## v1.5.0-beta.1 (2026-07-13)
+## v1.5.0 (2026-07-13)
 
 ### Chores
 
@@ -43,6 +43,12 @@
 
 ### Continuous Integration
 
+- Read HomeKit harness state inside container
+  ([`85a925c`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/85a925c4039f174f810beadbf8f02daef45b1e72))
+
+- Register HAP harness smoke workflow
+  ([`4f8d77f`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/4f8d77f20c2fa28991d28e3e721732040fac06d7))
+
 - Remove CodeQL advanced workflow in favour of default setup
   ([`801ccec`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/801ccec1e076f2db08771cdbd58d28be94c40270))
 
@@ -52,7 +58,7 @@
 ### Features
 
 - Rebase HeaterCooler on native core support
-  ([`d5cd2c4`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/d5cd2c4a602e40985faedb6fb576bc03fea10860))
+  ([`3494dd4`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/3494dd48093acba12ffae386c0f5ca6a9b131dc3))
 
 
 ## v1.4.3 (2026-07-06)
