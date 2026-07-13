@@ -89,12 +89,11 @@ jobs:
           print(matches[-1])
           PY
           )"
-          DEVICE_ID="$(python - "$CONFIG" <<'PY'
+          DEVICE_ID="$(docker exec -i heatercooler-harness python - <<'PY'
           from pathlib import Path
           import json
-          import sys
 
-          state_path = next(Path(sys.argv[1], ".storage").glob("homekit.*.state"))
+          state_path = next(Path("/config/.storage").glob("homekit.*.state"))
           print(json.loads(state_path.read_text(encoding="utf-8"))["mac"])
           PY
           )"
