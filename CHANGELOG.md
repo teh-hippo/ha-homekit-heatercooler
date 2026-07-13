@@ -1,6 +1,60 @@
 # CHANGELOG
 
 
+## v1.5.0-beta.1 (2026-07-13)
+
+### Chores
+
+- **deps**: Lock file maintenance
+  ([`59ae172`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/59ae172c63a95906fff08085560cf05d869bff8e))
+
+- **deps**: Lock file maintenance
+  ([`9dfa511`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/9dfa511b8657c73a52ed86540e4869ec6d115894))
+
+- **deps**: Lock file maintenance
+  ([`849ceb3`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/849ceb3ea7af4d518fc2def8a6f020c58d3b8c38))
+
+- **deps**: Lock file maintenance
+  ([`0056e89`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/0056e8923683586bba43c02d03a51e4744df758d))
+
+- **deps**: Lock file maintenance
+  ([`bd78fc4`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/bd78fc40cf89c270251c88401a81240f70ee9c65))
+
+- **deps**: Lock file maintenance
+  ([`828b42a`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/828b42a465f5693a561dc35e6aadbaeffebd5761))
+
+- **deps**: Update astral-sh/setup-uv action to v8.3.0
+  ([`b00f796`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/b00f796c08f8c55f8507dc0aabc8f19bbdae7b0c))
+
+- **deps**: Update astral-sh/setup-uv action to v8.3.1
+  ([`778cf75`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/778cf759c024f0c65c8f59ffb9214d77eb7bed20))
+
+- **deps**: Update astral-sh/setup-uv action to v8.3.2
+  ([`2206e42`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/2206e4231f9317124d31fdff6bbdebbcc5405bfb))
+
+- **deps**: Update dependency pyturbojpeg to v2
+  ([`b085aa1`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/b085aa1e9f0557283d59c32ece3109441549a874))
+
+- **deps**: Update python-semantic-release/python-semantic-release digest to 37a30a7
+  ([`ea3d5fc`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/ea3d5fc4eef9a2776ab3583a276f98f5a1816a7c))
+
+- **deps**: Update python-semantic-release/python-semantic-release digest to 39dd205
+  ([`0279d10`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/0279d1070e0f094e4a1cb73f1c6048022b47af0c))
+
+### Continuous Integration
+
+- Remove CodeQL advanced workflow in favour of default setup
+  ([`801ccec`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/801ccec1e076f2db08771cdbd58d28be94c40270))
+
+- **release**: Enable HeaterCooler rebase beta channel
+  ([`fdc6e5f`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/fdc6e5f6d4d65bdcbfce9068296de7e1f6d6be7c))
+
+### Features
+
+- Rebase HeaterCooler on native core support
+  ([`d5cd2c4`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/d5cd2c4a602e40985faedb6fb576bc03fea10860))
+
+
 ## v1.4.3 (2026-07-06)
 
 ### Build System
