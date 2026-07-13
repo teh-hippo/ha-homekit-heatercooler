@@ -1,0 +1,125 @@
+name: HAP harness smoke
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    name: Mock climate to HomeKit (${{ matrix.routing_mode }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - routing_mode: legacy
+            image: ghcr.io/home-assistant/home-assistant:2026.7.2
+            configuration: configuration.yaml
+          - routing_mode: native
+            image: ghcr.io/home-assistant/home-assistant:dev
+            configuration: configuration-native.yaml
+    steps:
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+
+      - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7
+        with:
+          repository: teh-hippo/ha-test-harness
+          path: harness
+
+      - uses: astral-sh/setup-uv@11f9893b081a58869d3b5fccaea48c9e9e46f990 # v8.3.2
+        with:
+          python-version: "3.14"
+
+      - name: Start the disposable Home Assistant bridge
+        env:
+          CONFIG: ${{ runner.temp }}/heatercooler-harness
+          HA_IMAGE: ${{ matrix.image }}
+          HARNESS_CONFIGURATION: ${{ matrix.configuration }}
+        run: |
+          set -euo pipefail
+          harness/podman/ha-bench.sh \
+            --engine docker \
+            --name heatercooler-harness \
+            --image "$HA_IMAGE" \
+            --config "$CONFIG" \
+            --host-net \
+            --recreate \
+            --component "$GITHUB_WORKSPACE/harness/mocks/custom_components/mock_climate" \
+            --component "$GITHUB_WORKSPACE/custom_components/homekit_heatercooler" \
+            --seed-config "$GITHUB_WORKSPACE/tests/harness/$HARNESS_CONFIGURATION"
+
+      - name: Pair and verify the bridge
+        env:
+          CONFIG: ${{ runner.temp }}/heatercooler-harness
+          HARNESS_HOMEKIT_DIR: ${{ github.workspace }}/harness/homekit
+          HA_URL: http://127.0.0.1:18127
+          ROUTING_MODE: ${{ matrix.routing_mode }}
+        run: |
+          set -euo pipefail
+          for _ in $(seq 1 60); do
+            if curl -fsS "$HA_URL/api/onboarding" >/dev/null; then
+              break
+            fi
+            sleep 2
+          done
+          curl -fsS "$HA_URL/api/onboarding" >/dev/null
+
+          for _ in $(seq 1 60); do
+            if grep -Fq "routing loaded (mode=$ROUTING_MODE," "$CONFIG/home-assistant.log" \
+              && grep -Eq 'Pincode: [0-9]{3}-[0-9]{2}-[0-9]{3}' "$CONFIG/home-assistant.log"; then
+              break
+            fi
+            sleep 2
+          done
+          grep -Fq "routing loaded (mode=$ROUTING_MODE," "$CONFIG/home-assistant.log"
+          PIN="$(python - "$CONFIG/home-assistant.log" <<'PY'
+          from pathlib import Path
+          import re
+          import sys
+
+          matches = re.findall(
+              r"Pincode: (\d{3}-\d{2}-\d{3})",
+              Path(sys.argv[1]).read_text(encoding="utf-8", errors="replace"),
+          )
+          if not matches:
+              raise SystemExit("HomeKit pairing code not found")
+          print(matches[-1])
+          PY
+          )"
+          DEVICE_ID="$(python - "$CONFIG" <<'PY'
+          from pathlib import Path
+          import json
+          import sys
+
+          state_path = next(Path(sys.argv[1], ".storage").glob("homekit.*.state"))
+          print(json.loads(state_path.read_text(encoding="utf-8"))["mac"])
+          PY
+          )"
+          HA_TOKEN="$(python harness/rest/onboard.py --url "$HA_URL" --token-only)"
+
+          cd "$HARNESS_HOMEKIT_DIR"
+          uv venv
+          uv pip install aiohomekit
+
+          if [[ "$ROUTING_MODE" == "legacy" ]]; then
+            HC_DEVICE_ID="$DEVICE_ID" HC_PIN="$PIN" HC_IP=127.0.0.1 HC_PORT=21063 \
+              HC_PAIRING_FILE="${RUNNER_TEMP}/heatercooler-shape-pairing.json" \
+              .venv/bin/python smoke.py --force-fallback
+          fi
+
+          HARNESS_HOMEKIT_DIR="$HARNESS_HOMEKIT_DIR" \
+            HA_URL="$HA_URL" \
+            HA_TOKEN="$HA_TOKEN" \
+            HC_ROUTING_MODE="$ROUTING_MODE" \
+            HC_DEVICE_ID="$DEVICE_ID" \
+            HC_PIN="$PIN" \
+            HC_IP=127.0.0.1 \
+            HC_PORT=21063 \
+            .venv/bin/python "$GITHUB_WORKSPACE/tests/harness/hap_write_smoke.py"
+
+      - name: Remove disposable bridge
+        if: always()
+        run: docker rm -f heatercooler-harness || true

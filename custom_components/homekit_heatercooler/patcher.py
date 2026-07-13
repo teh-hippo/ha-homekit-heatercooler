@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 import inspect
 import logging
@@ -15,12 +15,17 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
 )
 from homeassistant.components.homekit import accessories as homekit_accessories
-from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME
+from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME, CONF_TYPE
 from homeassistant.core import HomeAssistant, State
 
-from . import type_heatercooler as _type_heatercooler  # noqa: F401
 from .climate_util import as_float
-from .const import CONF_FAN_LANE, DATA_PATCH_STATE, DEFAULT_FAN_LANE, DOMAIN
+from .const import (
+    CONF_FAN_LANE,
+    DATA_PATCH_STATE,
+    DEFAULT_FAN_LANE,
+    DOMAIN,
+    TYPE_HEATER_COOLER,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,6 +44,7 @@ class PatchState:
     include_entities: set[str]
     exclude_entities: set[str]
     fan_lane: str
+    native_support: bool
     original_get_accessory: GetAccessory
     original_homekit_get_accessory: GetAccessory
 
@@ -76,6 +82,24 @@ def _get_accessory_params(func: Callable[..., Any]) -> tuple[str, ...]:
         return ()
 
 
+def native_heatercooler_available() -> bool:
+    """Return whether HomeKit provides its own HeaterCooler implementation."""
+    climate_types = getattr(homekit_accessories, "CLIMATE_TYPES", None)
+    return (
+        isinstance(climate_types, Mapping)
+        and climate_types.get(TYPE_HEATER_COOLER) == "HeaterCooler"
+        and "HeaterCooler" in homekit_accessories.TYPES
+    )
+
+
+def _register_legacy_type() -> bool:
+    """Register the bundled type only on cores without native support."""
+    from .type_heatercooler import register_legacy_type
+
+    register_legacy_type()
+    return "HeaterCooler" in homekit_accessories.TYPES
+
+
 def apply_patch(
     hass: HomeAssistant,
     include_entities: set[str],
@@ -83,11 +107,17 @@ def apply_patch(
     fan_lane: str = DEFAULT_FAN_LANE,
 ) -> None:
     """Patch HomeKit get_accessory to expose selected climates as HeaterCooler."""
-    if "HeaterCooler" not in homekit_accessories.TYPES:
+    native_support = native_heatercooler_available()
+    if not native_support and not _register_legacy_type():
         _LOGGER.error(
             "HeaterCooler accessory type is not registered; leaving HomeKit untouched"
         )
         return
+
+    if native_support and fan_lane != DEFAULT_FAN_LANE:
+        _LOGGER.warning(
+            "fan_lane is ignored while HomeKit's native HeaterCooler support is active"
+        )
 
     domain_data = hass.data.setdefault(DOMAIN, {})
     patch_state = domain_data.get(DATA_PATCH_STATE)
@@ -95,6 +125,7 @@ def apply_patch(
         patch_state.include_entities = include_entities
         patch_state.exclude_entities = exclude_entities
         patch_state.fan_lane = fan_lane
+        patch_state.native_support = native_support
         return
 
     original_get_accessory = homekit_accessories.get_accessory
@@ -111,6 +142,7 @@ def apply_patch(
         include_entities=include_entities,
         exclude_entities=exclude_entities,
         fan_lane=fan_lane,
+        native_support=native_support,
         original_get_accessory=original_get_accessory,
         original_homekit_get_accessory=original_homekit_get_accessory,
     )
@@ -134,6 +166,11 @@ def apply_patch(
                 )
                 and supports_heatercooler(state)
             ):
+                if patch_state.native_support:
+                    native_config = {**config, CONF_TYPE: TYPE_HEATER_COOLER}
+                    return patch_state.original_get_accessory(
+                        hass, driver, state, aid, native_config
+                    )
                 name = config.get(CONF_NAME, state.name)
                 hc_config = {**config, CONF_FAN_LANE: patch_state.fan_lane}
                 return homekit_accessories.TYPES["HeaterCooler"](

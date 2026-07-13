@@ -1,0 +1,33 @@
+homeassistant:
+  name: HeaterCooler Harness
+
+http:
+  server_port: 18127
+
+api:
+
+logger:
+  default: warning
+  logs:
+    custom_components.homekit_heatercooler: debug
+    homeassistant.components.homekit: info
+
+mock_climate:
+
+homekit:
+  - name: HC Harness Bridge
+    port: 21063
+    filter:
+      include_entities:
+        - climate.mock_daikin
+        - climate.mock_dual_swing
+    entity_config:
+      climate.mock_daikin:
+        type: thermostat
+      climate.mock_dual_swing:
+        type: thermostat
+
+homekit_heatercooler:
+  include_entities:
+    - climate.mock_daikin
+  fan_lane: auto
