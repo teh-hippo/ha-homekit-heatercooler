@@ -48,6 +48,9 @@ class HomeKitHeaterCoolerPatchedEntitiesSensor(SensorEntity):
         return {
             "patch_active": status.get("patch_active", False),
             "hook_installed": status.get("hook_installed", False),
+            "native_support": status.get("native_support", False),
+            "routing_mode": status.get("routing_mode", "legacy"),
+            "fan_lane_supported": status.get("fan_lane_supported", True),
             "include_entities": status.get("include_entities", []),
             "exclude_entities": status.get("exclude_entities", []),
             "target_entities": status.get("target_entities", []),
@@ -68,7 +71,7 @@ class HomeKitHeaterCoolerPatchedEntitiesSensor(SensorEntity):
             identifiers={(DOMAIN, self._entry.entry_id)},
             name="HomeKit HeaterCooler Bridge",
             manufacturer="Home Assistant",
-            model="HeaterCooler patch",
+            model="HeaterCooler routing",
             configuration_url="https://github.com/teh-hippo/ha-homekit-heatercooler",
         )
 

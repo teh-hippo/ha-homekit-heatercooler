@@ -11,16 +11,19 @@ Expose selected Home Assistant `climate` entities as a native **HeaterCooler** a
 
 Home Assistant's HomeKit Bridge maps `climate` entities to a Thermostat accessory. For air conditioners and heat pumps (for example, Daikin units), a native **HeaterCooler** tile is a better fit: one tile carries the mode, target temperature, cooling and heating thresholds, fan speed, and swing, with power as a separate control and an idle state once the room is at temperature.
 
-Native HeaterCooler support was proposed for core in [home-assistant/core#148231](https://github.com/home-assistant/core/pull/148231) but was not accepted, so the Thermostat stays core's default. This integration provides the HeaterCooler mapping as an opt-in on top of the existing HomeKit Bridge, remapping only the `climate` entities you explicitly include (for example, `climate.aircon`). Everything else stays untouched.
+[Native HeaterCooler support](https://github.com/home-assistant/core/pull/148231) is now merged into Home Assistant core `dev`. It was merged after Home Assistant 2026.7.2, so this integration remains the legacy implementation for that release and earlier versions.
 
-This integration is the reference implementation of an opt-in native HeaterCooler, and a matching Home Assistant core patch tracks it. That patch adds a `type: heater_cooler` option for `climate` entities in the HomeKit integration while the default stays Thermostat, so existing setups are unaffected unless you opt in.
+Once Home Assistant includes native support, this integration routes the entities you select through core's native HeaterCooler class instead of replacing it. That keeps an existing configuration working while you migrate. In the HomeKit Bridge options, choose **Heater Cooler** for each selected climate entity, then remove this integration.
 
 ## Features
 
 - Native HomeKit **HeaterCooler** service for selected climates
+- Uses core's native implementation automatically when it is available
 - Maps HVAC mode, active state, thresholds, fan speed, and swing mode
-- Configurable fan slider mode: three speeds mapped to auto or manual fan settings
+- Configurable fan slider mode on legacy cores
 - Supports single setpoint and dual threshold climates
+- Derives heating and cooling activity when an integration omits `hvac_action`
+- Exposes reported current humidity through a linked HomeKit sensor
 - Safe-by-default targeting (`include_entities` required)
 - Adds a diagnostic sensor so you can verify active patch coverage in Home Assistant UI
 - No changes to your live system needed until you install it
@@ -64,10 +67,21 @@ HomeKit's HeaterCooler tile has a single linear fan slider, so this integration 
 
 If the entity has no fan modes matching the chosen mode, its own fan modes are used as-is. Fan modes outside the chosen mode stay available from the underlying `climate` entity.
 
+This setting applies only to the legacy implementation. Core's native HeaterCooler keeps automatic fan control through a linked Fan service instead.
+
+### Migrating to native HomeKit support
+
+When your Home Assistant release includes native HeaterCooler support:
+
+1. Open **Settings → Devices & Services → HomeKit Bridge → Configure**.
+2. Choose **Heater Cooler** for each climate entity currently selected here.
+3. Confirm the native accessory in Apple Home, then remove this integration.
+
 ## How this patch works
 
 - You select one or more `climate` entities in this integration.
-- Those entities appear in Apple Home as **HeaterCooler** instead of Thermostat.
+- On legacy cores, those entities use this integration's **HeaterCooler** implementation.
+- On native cores, those entities use Home Assistant's built-in **HeaterCooler** implementation.
 - Everything else in HomeKit keeps its normal behavior.
 - Home Assistant core files are not changed on disk.
 
@@ -77,7 +91,7 @@ It keeps working across normal restarts while:
 - at least one target entity is configured in this integration
 - the target entities are included in HomeKit Bridge
 
-After some Home Assistant updates, mapping can fall back to default behavior until this integration is updated.
+The diagnostic sensor reports whether the selected entities use the legacy or native route.
 
 ## Development (uv)
 
@@ -86,6 +100,20 @@ bash scripts/check.sh
 ```
 
 Requires [uv](https://docs.astral.sh/uv/). Uses [Conventional Commits](https://www.conventionalcommits.org/).
+
+### Hardware-free end-to-end smoke
+
+[`tests/harness/configuration.yaml`](tests/harness/configuration.yaml) configures the reusable [HA test harness](https://github.com/teh-hippo/ha-test-harness): it routes `Mock Daikin` through this integration while keeping `Mock Dual Swing` as a Thermostat. The native-core workflow uses [`tests/harness/configuration-native.yaml`](tests/harness/configuration-native.yaml), which pins both entities to Thermostat first so the selective override is proven rather than hidden by core's automatic routing.
+
+```bash
+HARNESS_DIR=/path/to/ha-test-harness
+"$HARNESS_DIR/podman/ha-bench.sh" --name heatercooler-harness --host-net \
+  --component "$HARNESS_DIR/mocks/custom_components/mock_climate" \
+  --component "$PWD/custom_components/homekit_heatercooler" \
+  --seed-config "$PWD/tests/harness/configuration.yaml"
+```
+
+Use the harness’s [HomeKit smoke](https://github.com/teh-hippo/ha-test-harness/tree/master/homekit) to pair, assert the two accessory types, and unpair the disposable bridge. [`tests/harness/hap_write_smoke.py`](tests/harness/hap_write_smoke.py) verifies that a HAP target-mode write reaches Mock Daikin. The manual **HAP harness smoke** workflow checks both the legacy 2026.7.2 route and the native core `dev` route.
 
 ## License
 

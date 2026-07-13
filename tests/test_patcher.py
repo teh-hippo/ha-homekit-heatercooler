@@ -11,6 +11,7 @@ from custom_components.homekit_heatercooler.const import (
     DATA_PATCH_STATE,
     DOMAIN,
     FAN_LANE_MANUAL,
+    TYPE_HEATER_COOLER,
 )
 from custom_components.homekit_heatercooler.patcher import (
     EXPECTED_GET_ACCESSORY_PARAMS,
@@ -29,7 +30,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.homekit import accessories as homekit_accessories
-from homeassistant.const import ATTR_SUPPORTED_FEATURES
+from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_TYPE
 from homeassistant.core import HomeAssistant, State
 from tests.common import ENTITY_ID, set_climate
 
@@ -180,6 +181,51 @@ async def test_patch_threads_configured_fan_lane(
         assert accessory.ordered_fan_speeds == ["low", "mid", "high"]
     finally:
         remove_patch(hass)
+
+
+async def test_patch_routes_to_native_heatercooler(
+    hass: HomeAssistant,
+    hk_driver: object,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """The compatibility patch must select core's type without replacing it."""
+    set_climate(hass, HVACMode.COOL, **{ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF]})
+    captured_config: dict[object, object] = {}
+    native_accessory = object()
+
+    def _native_get_accessory(
+        hass: object,
+        driver: object,
+        state: object,
+        aid: object,
+        config: dict[object, object],
+    ) -> object:
+        captured_config.update(config)
+        return native_accessory
+
+    with (
+        patch.object(
+            homekit_accessories,
+            "CLIMATE_TYPES",
+            {TYPE_HEATER_COOLER: "HeaterCooler"},
+            create=True,
+        ),
+        patch.dict(homekit_accessories.TYPES, {"HeaterCooler": object}),
+        patch.object(homekit_accessories, "get_accessory", _native_get_accessory),
+        patch.object(homekit_module, "get_accessory", _native_get_accessory),
+    ):
+        caplog.set_level(logging.WARNING)
+        apply_patch(hass, {ENTITY_ID}, set(), fan_lane=FAN_LANE_MANUAL)
+        try:
+            accessory = homekit_accessories.get_accessory(
+                hass, hk_driver, hass.states.get(ENTITY_ID), 2, {}
+            )
+            assert accessory is native_accessory
+            assert captured_config[CONF_TYPE] == TYPE_HEATER_COOLER
+            assert "fan_lane" not in captured_config
+            assert "fan_lane is ignored" in caplog.text
+        finally:
+            remove_patch(hass)
 
 
 async def test_apply_patch_no_op_on_signature_drift(

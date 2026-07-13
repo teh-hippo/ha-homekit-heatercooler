@@ -35,7 +35,12 @@ from .const import (
     PLATFORMS,
     SIGNAL_PATCH_STATUS_UPDATED,
 )
-from .patcher import apply_patch, remove_patch, supports_heatercooler
+from .patcher import (
+    apply_patch,
+    native_heatercooler_available,
+    remove_patch,
+    supports_heatercooler,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -158,8 +163,9 @@ def _refresh_patch(
     _update_patch_status(hass, include_entities, exclude_entities)
     patch_status = domain_data[DATA_PATCH_STATUS]
     _LOGGER.info(
-        "HomeKit HeaterCooler patch loaded (include_entities=%s, "
+        "HomeKit HeaterCooler routing loaded (mode=%s, include_entities=%s, "
         "exclude_entities=%s, patched_entities=%s)",
+        patch_status["routing_mode"],
         sorted(include_entities),
         sorted(exclude_entities),
         patch_status["patched_entities"],
@@ -281,10 +287,14 @@ def _build_patch_status(
         unsupported_entities.append(entity_id)
 
     hook_installed = bool(_domain_data(hass).get(DATA_PATCH_STATE))
+    native_support = native_heatercooler_available()
 
     return {
         "patch_active": hook_installed and bool(patched_entities),
         "hook_installed": hook_installed,
+        "native_support": native_support,
+        "routing_mode": "native" if native_support else "legacy",
+        "fan_lane_supported": not native_support,
         "include_entities": sorted(include_entities),
         "exclude_entities": sorted(exclude_entities),
         "target_entities": target_entities,
