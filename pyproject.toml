@@ -75,11 +75,6 @@ other_allowed_tags = ["chore", "ci", "docs", "style", "refactor", "test"]
 match = "master"
 prerelease = false
 
-[tool.semantic_release.branches.beta]
-match = "feat/rebase-native-heatercooler"
-prerelease = true
-prerelease_token = "beta"
-
 [tool.semantic_release.changelog]
 mode = "init"
 
