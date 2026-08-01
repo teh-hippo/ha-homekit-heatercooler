@@ -110,6 +110,11 @@ fi
 
 start_ha() {
     local image="$1" with_integration="$2"
+    # Stop gracefully so Home Assistant flushes .storage on the way out.
+    # ha-bench.sh --recreate force-removes the container, which loses the
+    # delayed writes behind the auth tokens and the HomeKit pairing, and a
+    # real upgrade is a clean shutdown anyway.
+    "$ENGINE" stop --time 60 "$NAME" >/dev/null 2>&1 || true
     # Home Assistant runs as root and leaves root-owned bytecode inside the
     # copied components, which ha-bench.sh cannot clear as the invoking user.
     # Clearing the directory here keeps each phase's component set exact and

@@ -23,6 +23,7 @@ import os
 from pathlib import Path
 import sys
 from typing import Any
+import urllib.error
 from urllib.parse import urlparse
 import urllib.request
 
@@ -102,10 +103,18 @@ def _read_state(url: str, token: str) -> str:
         f"{url.rstrip('/')}/api/states/climate.mock_daikin",
         headers={"Authorization": f"Bearer {token}"},
     )
-    with urllib.request.urlopen(  # noqa: S310 - URL scheme is constrained above.
-        request, timeout=15
-    ) as response:
-        return json.loads(response.read())["state"]
+    try:
+        with urllib.request.urlopen(  # noqa: S310 - URL scheme is constrained above.
+            request, timeout=15
+        ) as response:
+            return json.loads(response.read())["state"]
+    except urllib.error.HTTPError as err:
+        if err.code == 401:
+            raise RuntimeError(
+                "Home Assistant rejected the token minted before the change; "
+                "the auth store did not survive the restart"
+            ) from err
+        raise
 
 
 async def _wait_for_state(
