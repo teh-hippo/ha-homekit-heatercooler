@@ -151,7 +151,7 @@ HARNESS_DIR=/path/to/ha-test-harness
   --seed-config "$PWD/tests/harness/configuration.yaml"
 ```
 
-Use the harness’s [HomeKit smoke](https://github.com/teh-hippo/ha-test-harness/tree/master/homekit) to pair, assert the two accessory types, and unpair the disposable bridge. [`tests/harness/hap_write_smoke.py`](tests/harness/hap_write_smoke.py) verifies that a HAP target-mode write reaches Mock Daikin. The manual **HAP harness smoke** workflow checks both the legacy 2026.7.4 route and the native 2026.8 route.
+Use the harness’s [HomeKit smoke](https://github.com/teh-hippo/ha-test-harness/tree/master/homekit) to pair, assert the two accessory types, and unpair the disposable bridge. [`tests/harness/hap_write_smoke.py`](tests/harness/hap_write_smoke.py) verifies that a HAP target-mode write reaches Mock Daikin. The manual **HAP harness smoke** workflow runs both core generations, 2026.7.4 and 2026.8, and asserts they produce the same accessory shape.
 
 ## License
 
