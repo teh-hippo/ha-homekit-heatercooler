@@ -1,6 +1,22 @@
 # CHANGELOG
 
 
+## v1.6.1 (2026-08-01)
+
+### Bug Fixes
+
+- Address findings from the v1.6.0 review
+  ([`a008185`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/a00818505ec22ce8b621aa4c4b21b38b35bfbf59))
+
+### Continuous Integration
+
+- Run the HAP harness in GitHub on both cores
+  ([`024666a`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/024666acbac011917aab7d7e4eb4b5b585adb628))
+
+- Run the suite against both core generations
+  ([`8c97047`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/8c97047995e2d4afb61a4efe2b2d601865dca8be))
+
+
 ## v1.6.0 (2026-08-01)
 
 ### Chores
