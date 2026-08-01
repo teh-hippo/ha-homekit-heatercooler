@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
-from custom_components.homekit_heatercooler.const import DOMAIN
+from custom_components.homekit_heatercooler.const import DATA_PATCH_STATUS, DOMAIN
 from homeassistant.components.climate import ATTR_HVAC_MODES, HVACMode
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -42,3 +42,15 @@ async def test_sensor_reports_patch_diagnostics(hass: HomeAssistant) -> None:
     assert state.attributes["missing_entities"] == ["climate.missing"]
     assert state.attributes["patch_active"] is True
     assert state.attributes["hook_installed"] is True
+    # Selected entities always use the bundled accessory, so this never reads
+    # "native" or "legacy" again.
+    assert state.attributes["routing_mode"] == "bundled"
+
+    # The attributes are the shared status verbatim, minus the count that
+    # native_value already carries. Asserting the whole set means a diagnostic
+    # cannot be added to the status and silently fail to surface.
+    status = hass.data[DOMAIN][DATA_PATCH_STATUS]
+    assert "patched_entities_count" not in state.attributes
+    assert {
+        key: value for key, value in status.items() if key != "patched_entities_count"
+    }.items() <= state.attributes.items()

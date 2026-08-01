@@ -287,21 +287,18 @@ def _build_patch_status(
         unsupported_entities.append(entity_id)
 
     hook_installed = bool(_domain_data(hass).get(DATA_PATCH_STATE))
-    native_support = native_heatercooler_available()
 
     return {
         "patch_active": hook_installed and bool(patched_entities),
         "hook_installed": hook_installed,
-        "native_support": native_support,
+        "native_support": native_heatercooler_available(),
         # Describes what routing is actually in effect, not what we intended.
         # apply_patch declines to install on a HomeKit signature change.
         "routing_mode": "bundled" if hook_installed else "inactive",
-        "fan_lane_supported": True,
         "include_entities": sorted(include_entities),
         "exclude_entities": sorted(exclude_entities),
         "target_entities": target_entities,
         "patched_entities": patched_entities,
-        "currently_patchable_entities": patched_entities,
         "patched_entities_count": len(patched_entities),
         "missing_entities": missing_entities,
         "unsupported_entities": unsupported_entities,

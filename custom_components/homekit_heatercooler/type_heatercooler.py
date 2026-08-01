@@ -307,22 +307,6 @@ class HeaterCooler(HomeKitClimateAccessory):
             if call.commit_mode and self._last_known_mode == known_mode:
                 self._last_known_mode = call.commit_mode
 
-    @override
-    def _dispatch_climate_write(self, service: str, params: dict[str, Any]) -> None:
-        """Serialize direct fan and swing writes behind batches."""
-        self.hass.async_create_task(
-            self._async_apply_locked_write(service, params), eager_start=True
-        )
-
-    @_locked_write
-    async def _async_apply_locked_write(
-        self, service: str, params: dict[str, Any]
-    ) -> None:
-        """Apply one direct write under the batch lock."""
-        await self.async_call_service_and_wait(
-            CLIMATE_DOMAIN, service, {ATTR_ENTITY_ID: self.entity_id, **params}
-        )
-
     def _queue_fan_swing_changes(
         self,
         char_values: dict[str, Any],
