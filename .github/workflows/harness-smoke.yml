@@ -8,7 +8,7 @@ permissions:
 
 jobs:
   smoke:
-    name: Mock climate to HomeKit (${{ matrix.routing_mode }})
+    name: Mock climate to HomeKit (${{ matrix.core }})
     runs-on: ubuntu-latest
     timeout-minutes: 15
     strategy:
@@ -16,12 +16,12 @@ jobs:
       matrix:
         include:
           # Latest release without native HeaterCooler support.
-          - routing_mode: legacy
+          - core: legacy
             image: ghcr.io/home-assistant/home-assistant:2026.7.4
             configuration: configuration.yaml
           # First release carrying native support. Move to 2026.8 once it is
           # tagged, tracked in issue #90.
-          - routing_mode: native
+          - core: native
             image: ghcr.io/home-assistant/home-assistant:2026.8.0b3
             configuration: configuration-native.yaml
     steps:
@@ -59,7 +59,7 @@ jobs:
           CONFIG: ${{ runner.temp }}/heatercooler-harness
           HARNESS_HOMEKIT_DIR: ${{ github.workspace }}/harness/homekit
           HA_URL: http://127.0.0.1:18127
-          ROUTING_MODE: ${{ matrix.routing_mode }}
+          CORE: ${{ matrix.core }}
         run: |
           set -euo pipefail
           for _ in $(seq 1 60); do
@@ -71,13 +71,13 @@ jobs:
           curl -fsS "$HA_URL/api/onboarding" >/dev/null
 
           for _ in $(seq 1 60); do
-            if grep -Fq "routing loaded (mode=$ROUTING_MODE," "$CONFIG/home-assistant.log" \
+            if grep -Fq "routing loaded (mode=bundled," "$CONFIG/home-assistant.log" \
               && grep -Eq 'Pincode: [0-9]{3}-[0-9]{2}-[0-9]{3}' "$CONFIG/home-assistant.log"; then
               break
             fi
             sleep 2
           done
-          grep -Fq "routing loaded (mode=$ROUTING_MODE," "$CONFIG/home-assistant.log"
+          grep -Fq "routing loaded (mode=bundled," "$CONFIG/home-assistant.log"
           PIN="$(python - "$CONFIG/home-assistant.log" <<'PY'
           from pathlib import Path
           import re
@@ -106,16 +106,14 @@ jobs:
           uv venv
           uv pip install aiohomekit
 
-          if [[ "$ROUTING_MODE" == "legacy" ]]; then
-            HC_DEVICE_ID="$DEVICE_ID" HC_PIN="$PIN" HC_IP=127.0.0.1 HC_PORT=21063 \
-              HC_PAIRING_FILE="${RUNNER_TEMP}/heatercooler-shape-pairing.json" \
-              .venv/bin/python smoke.py --force-fallback
-          fi
+          HC_DEVICE_ID="$DEVICE_ID" HC_PIN="$PIN" HC_IP=127.0.0.1 HC_PORT=21063 \
+            HC_PAIRING_FILE="${RUNNER_TEMP}/heatercooler-shape-pairing.json" \
+            .venv/bin/python smoke.py --force-fallback
 
           HARNESS_HOMEKIT_DIR="$HARNESS_HOMEKIT_DIR" \
             HA_URL="$HA_URL" \
             HA_TOKEN="$HA_TOKEN" \
-            HC_ROUTING_MODE="$ROUTING_MODE" \
+            HC_CORE="$CORE" \
             HC_DEVICE_ID="$DEVICE_ID" \
             HC_PIN="$PIN" \
             HC_IP=127.0.0.1 \

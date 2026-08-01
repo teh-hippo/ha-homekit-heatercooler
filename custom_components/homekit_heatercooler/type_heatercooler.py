@@ -26,7 +26,6 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.homekit.accessories import TYPES
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
 from homeassistant.core import State, callback
 from homeassistant.util.enum import try_parse_enum
@@ -588,8 +587,3 @@ class HeaterCooler(HomeKitClimateAccessory):
         ):
             return HVACAction.HEATING
         return HVACAction.IDLE
-
-
-def register_legacy_type() -> None:
-    """Register the bundled type only on cores without native support."""
-    TYPES.register("HeaterCooler")(HeaterCooler)

@@ -47,9 +47,10 @@ def _parser() -> argparse.ArgumentParser:
         "--port", type=int, default=int(os.environ.get("HC_PORT", "21063"))
     )
     parser.add_argument(
-        "--routing-mode",
+        "--core",
         choices=("legacy", "native"),
-        default=os.environ.get("HC_ROUTING_MODE", "legacy"),
+        default=os.environ.get("HC_CORE", "legacy"),
+        help="Which Home Assistant core generation is under test.",
     )
     return parser
 
@@ -158,17 +159,19 @@ async def _run(args: argparse.Namespace) -> None:
                         fan_v2 in daikin.services
                         and rotation_speed in daikin.services[fan_v2]
                     )
-                    if args.routing_mode == "legacy" and (
-                        not rotation_on_heater_cooler or rotation_on_fan
-                    ):
+                    # Both core generations must land on the same shape. The
+                    # integration serves its own accessory either way, so the
+                    # speed slider belongs on the HeaterCooler service and core's
+                    # linked fan tile must not appear for an entity we claimed.
+                    if not rotation_on_heater_cooler:
                         raise RuntimeError(
-                            "Legacy route did not expose RotationSpeed on HeaterCooler"
+                            f"{args.core} core did not expose RotationSpeed on "
+                            "HeaterCooler"
                         )
-                    if args.routing_mode == "native" and (
-                        rotation_on_heater_cooler or not rotation_on_fan
-                    ):
+                    if rotation_on_fan:
                         raise RuntimeError(
-                            "Native route did not expose RotationSpeed on linked Fanv2"
+                            f"{args.core} core exposed RotationSpeed on a linked "
+                            "Fanv2; routing did not reach our accessory"
                         )
 
                     target_iid = daikin.services[SVC_HEATER_COOLER][
@@ -187,7 +190,7 @@ async def _run(args: argparse.Namespace) -> None:
 def main() -> int:
     args = _parser().parse_args()
     asyncio.run(_run(args))
-    print(f"HAP {args.routing_mode} route and target-mode write: PASS")
+    print(f"HAP accessory shape and target-mode write on {args.core} core: PASS")
     return 0
 
 

@@ -20,6 +20,7 @@ from custom_components.homekit_heatercooler.patcher import (
     _get_accessory_params,
     _should_patch_entity,
     apply_patch,
+    native_heatercooler_available,
     remove_patch,
     supports_heatercooler,
 )
@@ -32,7 +33,7 @@ from homeassistant.components.climate import (
     HVACMode,
 )
 from homeassistant.components.homekit import accessories as homekit_accessories
-from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_TYPE
+from homeassistant.const import ATTR_SUPPORTED_FEATURES
 from homeassistant.core import HomeAssistant, State
 from tests.common import ENTITY_ID, set_climate
 
@@ -46,14 +47,8 @@ def _state(**attributes: object) -> State:
 
 
 @contextmanager
-def legacy_core() -> Iterator[None]:
-    """Mask the core's native HeaterCooler so the bundled accessory is used.
-
-    Cores from 2026.8 map heater_cooler themselves, which makes the bundled
-    accessory unreachable. Pinning the pre-native shape keeps assertions about
-    the bundled accessory independent of the installed core, and restoring the
-    type registry stops the bundled registration leaking into other tests.
-    """
+def core_without_native() -> Iterator[None]:
+    """Present a core from before 2026.8, which has no HeaterCooler of its own."""
     with (
         patch.object(
             homekit_accessories,
@@ -64,6 +59,28 @@ def legacy_core() -> Iterator[None]:
         patch.dict(homekit_accessories.TYPES),
     ):
         yield
+
+
+class _CoreHeaterCooler:
+    """Stand-in for the HeaterCooler a 2026.8 core registers for itself."""
+
+
+@contextmanager
+def core_with_native() -> Iterator[None]:
+    """Present a 2026.8 core, which registers its own HeaterCooler."""
+    with (
+        patch.object(
+            homekit_accessories,
+            "CLIMATE_TYPES",
+            {TYPE_HEATER_COOLER: "HeaterCooler", TYPE_THERMOSTAT: "Thermostat"},
+            create=True,
+        ),
+        patch.dict(homekit_accessories.TYPES, {"HeaterCooler": _CoreHeaterCooler}),
+    ):
+        yield
+
+
+CORE_SHAPES = {"legacy": core_without_native, "native": core_with_native}
 
 
 def test_supports_heatercooler_with_fan_modes() -> None:
@@ -185,10 +202,11 @@ async def test_patch_skips_unconfigured_entities(
         remove_patch(hass)
 
 
+@pytest.mark.parametrize("core_shape", list(CORE_SHAPES))
 async def test_patch_threads_configured_fan_lane(
-    hass: HomeAssistant, hk_driver: object
+    hass: HomeAssistant, hk_driver: object, core_shape: str
 ) -> None:
-    """The fan lane chosen at apply time reaches the bundled HeaterCooler accessory."""
+    """The configured fan lane reaches the accessory on either core generation."""
     set_climate(
         hass,
         HVACMode.COOL,
@@ -197,8 +215,7 @@ async def test_patch_threads_configured_fan_lane(
             ATTR_FAN_MODES: SEVEN_FAN_MODES,
         },
     )
-    # Only the bundled accessory honours fan_lane, so mask native support.
-    with legacy_core():
+    with CORE_SHAPES[core_shape]():
         apply_patch(hass, {ENTITY_ID}, set(), fan_lane=FAN_LANE_MANUAL)
         try:
             accessory = homekit_accessories.get_accessory(
@@ -210,49 +227,33 @@ async def test_patch_threads_configured_fan_lane(
             remove_patch(hass)
 
 
-async def test_patch_routes_to_native_heatercooler(
-    hass: HomeAssistant,
-    hk_driver: object,
-    caplog: pytest.LogCaptureFixture,
+async def test_patch_uses_bundled_type_without_touching_core_registry(
+    hass: HomeAssistant, hk_driver: object
 ) -> None:
-    """The compatibility patch must select core's type without replacing it."""
-    set_climate(hass, HVACMode.COOL, **{ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF]})
-    captured_config: dict[object, object] = {}
-    native_accessory = object()
-
-    def _native_get_accessory(
-        hass: object,
-        driver: object,
-        state: object,
-        aid: object,
-        config: dict[object, object],
-    ) -> object:
-        captured_config.update(config)
-        return native_accessory
-
-    with (
-        patch.object(
-            homekit_accessories,
-            "CLIMATE_TYPES",
-            {TYPE_HEATER_COOLER: "HeaterCooler"},
-            create=True,
-        ),
-        patch.dict(homekit_accessories.TYPES, {"HeaterCooler": object}),
-        patch.object(homekit_accessories, "get_accessory", _native_get_accessory),
-        patch.object(homekit_module, "get_accessory", _native_get_accessory),
-    ):
-        caplog.set_level(logging.WARNING)
+    """On a 2026.8 core we serve our own class and leave core's registration alone."""
+    set_climate(
+        hass,
+        HVACMode.COOL,
+        **{
+            ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF],
+            ATTR_FAN_MODES: SEVEN_FAN_MODES,
+        },
+    )
+    with core_with_native():
+        assert native_heatercooler_available() is True
         apply_patch(hass, {ENTITY_ID}, set(), fan_lane=FAN_LANE_MANUAL)
         try:
             accessory = homekit_accessories.get_accessory(
                 hass, hk_driver, hass.states.get(ENTITY_ID), 2, {}
             )
-            assert accessory is native_accessory
-            assert captured_config[CONF_TYPE] == TYPE_HEATER_COOLER
-            assert "fan_lane" not in captured_config
-            assert "fan_lane is ignored" in caplog.text
+            # Our accessory, carrying the lane core cannot represent.
+            assert type(accessory).__module__.endswith("type_heatercooler")
+            assert accessory.ordered_fan_speeds == ["low", "mid", "high"]
+            # Core's own class must survive untouched for entities we never claimed.
+            assert homekit_accessories.TYPES["HeaterCooler"] is _CoreHeaterCooler
         finally:
             remove_patch(hass)
+        assert homekit_accessories.TYPES["HeaterCooler"] is _CoreHeaterCooler
 
 
 async def test_apply_patch_no_op_on_signature_drift(
@@ -297,7 +298,10 @@ async def test_patch_falls_back_to_default_on_error(
         state = hass.states.get(ENTITY_ID)
         caplog.clear()
         caplog.set_level(logging.ERROR)
-        with patch.dict(homekit_accessories.TYPES, {"HeaterCooler": _raise}):
+        with patch(
+            "custom_components.homekit_heatercooler.type_heatercooler.HeaterCooler",
+            _raise,
+        ):
             accessory = homekit_accessories.get_accessory(hass, hk_driver, state, 2, {})
         assert type(accessory).__name__ == "Thermostat"
         # The failure must be surfaced, not swallowed silently.
