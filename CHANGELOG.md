@@ -1,6 +1,55 @@
 # CHANGELOG
 
 
+## v1.6.0 (2026-08-01)
+
+### Chores
+
+- **deps**: Lock file maintenance
+  ([`f53c567`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/f53c567eba6b1ca6d3f1184481ddc6ab73e65f3a))
+
+- **deps**: Update actions/checkout digest to 3d3c42e
+  ([`162506a`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/162506a894994fdd5f3e693b1a2fc53a5ab7bbc0))
+
+- **deps**: Update astral-sh/setup-uv action to v9
+  ([`55a44ff`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/55a44ff56cd37021993ca2168f63823af685a501))
+
+- **deps**: Update dependency pyturbojpeg to v2.5.0
+  ([`b2e69fd`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/b2e69fd414021eeac801c7be275c3c7229ecad59))
+
+- **deps**: Update softprops/action-gh-release digest to 3d0d988
+  ([`8a414be`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/8a414be4d9f4faa6791bda517d451af83d2ef5f5))
+
+### Continuous Integration
+
+- **release**: Retire HeaterCooler beta channel
+  ([`99d9976`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/99d99769eb8e1b732fe72e542b3bd97e0641b6de))
+
+### Documentation
+
+- Correct how core 2026.8 handles the Daikin fan lane
+  ([`7495380`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/749538071105b844f5eb764a6114f1394b2dc76a))
+
+- Describe both core generations and what this bridges
+  ([`1783b79`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/1783b79de27c6a94ed10e0a94a934f012e9fa3d0))
+
+- Note the harness asserts one shape across both cores
+  ([`1851f8b`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/1851f8be69e7cf8b1b6f73e2ca1fbf77d4f1fb8a))
+
+- Record what core 2026.8 actually shipped
+  ([`9a5cbb6`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/9a5cbb63ee83e7607d78cf61470e2b86a2170347))
+
+### Features
+
+- Serve the bundled accessory on every core generation
+  ([`b7c3f82`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/b7c3f824a8e319acae245d8f3953364b86eb4bee))
+
+### Testing
+
+- Keep HeaterCooler tests off the Home Assistant beta
+  ([`b278e5f`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/b278e5fa550ae8236a21ddcc50cdf9ecc014c459))
+
+
 ## v1.5.0 (2026-07-13)
 
 ### Chores
