@@ -25,17 +25,24 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          # Latest release without native HeaterCooler support.
+          # Latest release without native HeaterCooler support. Always pinned:
+          # a rolling tag here would jump to 2026.8 the day it ships and stop
+          # covering the generation this leg exists to cover.
           - core: legacy
             image: ghcr.io/home-assistant/home-assistant:2026.7.4
+            rolling: ""
             configuration: configuration.yaml
-            expect: "2026.7"
-          # First release carrying native support. Move to 2026.8 once it is
-          # tagged, tracked in issue #90.
+            native: "no"
+          # First release carrying native support. Pinned for push runs so a
+          # commit always resolves to the same core, and swapped for the
+          # rolling beta tag on the weekly run so a pre-release change cannot
+          # land unseen. Both the pin and the rolling override go away once
+          # 2026.8.0 is tagged, tracked in issue #90.
           - core: native
             image: ghcr.io/home-assistant/home-assistant:2026.8.0b3
+            rolling: ghcr.io/home-assistant/home-assistant:beta
             configuration: configuration-native.yaml
-            expect: "2026.8"
+            native: "yes"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
@@ -51,7 +58,7 @@ jobs:
       - name: Start the disposable Home Assistant bridge
         env:
           CONFIG: ${{ runner.temp }}/heatercooler-harness
-          HA_IMAGE: ${{ matrix.image }}
+          HA_IMAGE: ${{ (github.event_name == 'schedule' && matrix.rolling) || matrix.image }}
           HARNESS_CONFIGURATION: ${{ matrix.configuration }}
         run: |
           set -euo pipefail
@@ -66,18 +73,31 @@ jobs:
             --component "$GITHUB_WORKSPACE/custom_components/homekit_heatercooler" \
             --seed-config "$GITHUB_WORKSPACE/tests/harness/$HARNESS_CONFIGURATION"
 
-      - name: Assert the intended Home Assistant version is running
+      # Asserts the capability that splits the two legs rather than a version
+      # string. A version prefix cannot work once the image is a rolling tag,
+      # and native HeaterCooler support is the thing each leg actually exists
+      # to exercise, so test that directly.
+      - name: Assert the core generation under test
         env:
-          EXPECT: ${{ matrix.expect }}
+          EXPECT_NATIVE: ${{ matrix.native }}
         run: |
           set -euo pipefail
-          actual="$(docker exec -i heatercooler-harness \
+          version="$(docker exec -i heatercooler-harness \
             python -c 'from homeassistant.const import __version__ as v; print(v)')"
-          echo "Home Assistant $actual"
-          case "$actual" in
-            "$EXPECT"*) ;;
-            *) echo "expected ${EXPECT}.x, got $actual" >&2; exit 1 ;;
-          esac
+          native="$(docker exec -i heatercooler-harness python -c '
+          import importlib.util
+
+          spec = importlib.util.find_spec(
+              "homeassistant.components.homekit.type_heater_coolers"
+          )
+          print("yes" if spec else "no")
+          ' 2>/dev/null)"
+          echo "Home Assistant $version (native HeaterCooler: $native)"
+          if [ "$native" != "$EXPECT_NATIVE" ]; then
+            echo "::error::${{ matrix.core }} leg expected native HeaterCooler" \
+              "$EXPECT_NATIVE, got $native on $version" >&2
+            exit 1
+          fi
 
       - name: Pair and verify the bridge
         env:
