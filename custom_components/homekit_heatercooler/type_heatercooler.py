@@ -62,8 +62,12 @@ HC_HASS_TO_HOMEKIT_TARGET = {
     HVACMode.AUTO: HC_TARGET_AUTO,
 }
 
-# Intentional legacy delta: Daikin reports Dry/Fan without a usable action, and
-# the custom integration has always represented either as an active idle unit.
+# Deliberate delta from core, which maps both to Cooling. Core contradicts
+# itself there: an entity that omits hvac_action while in dry or fan_only gets
+# Idle from _derive_action, so the same physical state renders two ways
+# depending only on whether the integration reports an action. Neither drying
+# nor blowing air is cooling, and the accessory still reads Active, so Idle is
+# both accurate and consistent.
 HC_HASS_TO_HOMEKIT_ACTION = {
     HVACAction.OFF: HC_INACTIVE,
     HVACAction.IDLE: HC_IDLE,
