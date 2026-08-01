@@ -1,6 +1,25 @@
 # CHANGELOG
 
 
+## v1.6.3 (2026-08-01)
+
+### Bug Fixes
+
+- Stop the sensor reporting a routing mode that cannot happen
+  ([`b1421d1`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/b1421d15918fac6c3a39697185584a2184bd4306))
+
+### Continuous Integration
+
+- Clear copied components before each upgrade phase
+  ([`8ba29c0`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/8ba29c036f88f9feef92b2900feca52203ddcef2))
+
+- Stop Home Assistant gracefully between upgrade phases
+  ([`86b48c7`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/86b48c75ff687d1089e17a0e36066d2469b4c555))
+
+- Wait for the API to accept the token before asserting
+  ([`24cc05e`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/24cc05e472df590c67f734f10ab795f96e5937fc))
+
+
 ## v1.6.2 (2026-08-01)
 
 ### Bug Fixes
