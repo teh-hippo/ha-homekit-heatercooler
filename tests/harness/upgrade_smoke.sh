@@ -160,6 +160,24 @@ sys.exit(0 if socket.socket().connect_ex(('127.0.0.1', $HAP_PORT)) == 0 else 1)
     exit 1
 }
 
+wait_for_api() {
+    # The unauthenticated endpoints answer before the auth provider is ready,
+    # so a token that is perfectly valid can still be refused for a moment
+    # after a restart. Gate on a real authenticated call, which keeps the
+    # assertions downstream sharp rather than papering over a genuine refusal.
+    local i
+    for i in $(seq 1 60); do
+        if curl -fsS -H "Authorization: Bearer $HA_TOKEN" \
+            "$HA_URL/api/" >/dev/null 2>&1; then
+            return 0
+        fi
+        sleep 2
+    done
+    echo "error: the Home Assistant API never accepted the token" >&2
+    "$ENGINE" logs --tail 40 "$NAME" >&2 || true
+    exit 1
+}
+
 state_value() {
     "$ENGINE" exec -i "$NAME" python -c "
 import json
@@ -196,6 +214,7 @@ start_ha "$BEFORE_IMAGE" "$BEFORE_WITH_INTEGRATION"
 wait_for_ha
 HA_TOKEN="$("$PY" "$HARNESS/rest/onboard.py" --url "$HA_URL" --token-only)"
 export HA_TOKEN
+wait_for_api
 
 "$PY" "$REPO/tests/harness/hap_upgrade_smoke.py" \
     --phase before \
@@ -216,6 +235,7 @@ echo "[upgrade] phase 2: $AFTER_IMAGE"
 cp "$REPO/tests/harness/configuration.yaml" "$CONFIG/configuration.yaml"
 start_ha "$AFTER_IMAGE" 1
 wait_for_ha
+wait_for_api
 
 "$PY" "$REPO/tests/harness/hap_upgrade_smoke.py" \
     --phase after \
