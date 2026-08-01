@@ -293,7 +293,9 @@ def _build_patch_status(
         "patch_active": hook_installed and bool(patched_entities),
         "hook_installed": hook_installed,
         "native_support": native_support,
-        "routing_mode": "bundled",
+        # Describes what routing is actually in effect, not what we intended.
+        # apply_patch declines to install on a HomeKit signature change.
+        "routing_mode": "bundled" if hook_installed else "inactive",
         "fan_lane_supported": True,
         "include_entities": sorted(include_entities),
         "exclude_entities": sorted(exclude_entities),

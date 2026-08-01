@@ -23,7 +23,12 @@ dev = [
 # these two groups are how the suite gets pinned to one core generation or the
 # other. They are mutually exclusive by construction.
 test-legacy = ["pytest-homeassistant-custom-component==0.13.348"]
-test-native = ["pytest-homeassistant-custom-component==0.13.351"]
+# The explicit pre-release pin is what lets uv resolve 2026.8 while it is still
+# in beta. A global prerelease allowance would apply to every other package too.
+test-native = [
+  "pytest-homeassistant-custom-component==0.13.351",
+  "homeassistant==2026.8.0b3",
+]
 
 [tool.mypy]
 python_version = "3.14"
@@ -64,8 +69,6 @@ fail_under = 70
 override-dependencies = ["pytest>=9.0.3", "PyJWT>=2.12.0"]
 conflicts = [[{ group = "test-legacy" }, { group = "test-native" }]]
 default-groups = ["dev", "test-legacy"]
-# 2026.8 is still a pre-release; the native group cannot resolve without this.
-prerelease = "allow"
 
 [tool.semantic_release]
 version_toml = ["pyproject.toml:project.version"]
