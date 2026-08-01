@@ -15,11 +15,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # Latest release without native HeaterCooler support.
           - routing_mode: legacy
-            image: ghcr.io/home-assistant/home-assistant:2026.7.2
+            image: ghcr.io/home-assistant/home-assistant:2026.7.4
             configuration: configuration.yaml
+          # First release carrying native support. Move to 2026.8 once it is
+          # tagged, tracked in issue #90.
           - routing_mode: native
-            image: ghcr.io/home-assistant/home-assistant:dev
+            image: ghcr.io/home-assistant/home-assistant:2026.8.0b3
             configuration: configuration-native.yaml
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
