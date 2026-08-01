@@ -29,15 +29,15 @@ Every cell was checked against the shipping cores, by pairing a real bridge over
 | Choice of fan lane, auto or manual | No | No | Yes |
 | Custom fan names such as `Quiet` | No | No | Yes |
 | Custom swing names such as `3D` | No | No | Yes |
-| Fan on the climate tile itself | No, separate tile | No, separate tile | Yes |
-| Linked fan tile with a HomeKit auto toggle | Yes | Yes | No |
+| Fan on the climate tile itself | No, always a separate tile | Only without an `auto` fan mode | Yes, always |
+| Linked fan tile with a HomeKit auto toggle | Only with an `auto` fan mode | Only with an `auto` fan mode | No |
 | Survives a malformed `min_temp` or `max_temp` | No, raises | No, raises | Yes |
 | Per-entity selection from the UI | No, YAML only | No, YAML only | Yes |
 | Diagnostic sensor showing the active route | No | No | Yes |
 
 Both core generations recognise only `low`, `middle`, `medium` and `high` as fan speeds, so the gaps are the same on each. Core 2026.8 did not introduce them; it moved the shared helper out of the Thermostat accessory and carried them along.
 
-The one thing core does better is the linked fan tile. Where an entity exposes an `auto` fan mode, core puts the fan on its own tile with a real HomeKit auto toggle and a running indicator. Selecting an entity here trades that away in exchange for the speeds the entity actually advertises. If you would rather have core's fan handling for a given entity, leave it out of **Include entities**.
+The one thing core does better is the linked fan tile. The two generations place the fan differently. On 2026.7 and below the Thermostat always moves the speed slider to a separate fan tile whenever core recognises any speed ([`type_thermostats.py`](https://github.com/home-assistant/core/blob/2026.7.4/homeassistant/components/homekit/type_thermostats.py#L262)). On 2026.8 the HeaterCooler keeps the slider on the climate tile and only splits it out when the entity exposes an `auto` fan mode ([`type_heater_coolers.py`](https://github.com/home-assistant/core/blob/dev/homeassistant/components/homekit/type_heater_coolers.py#L226)). Either way, the HomeKit auto toggle on that tile needs an `auto` fan mode. Selecting an entity here trades the separate tile away in exchange for the speeds the entity actually advertises. If you would rather have core's fan handling for a given entity, leave it out of **Include entities**.
 
 For reference, the fan speeds each side offers:
 

@@ -168,3 +168,56 @@ jobs:
       - name: Remove disposable bridge
         if: always()
         run: docker rm -f heatercooler-harness || true
+
+  upgrade:
+    name: Already-paired upgrade (${{ matrix.scenario }} on ${{ matrix.label }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # The core moves under a bridge that is already paired with our
+          # accessory. The shape has to hold across the generation change.
+          - scenario: core-upgrade
+            label: 2026.7 to 2026.8
+            before: ghcr.io/home-assistant/home-assistant:2026.7.4
+            after: ghcr.io/home-assistant/home-assistant:2026.8.0b3
+          # An existing user installs the integration. Core serves a Thermostat
+          # on this generation, so the service type changes outright.
+          - scenario: adopt
+            label: "2026.7"
+            before: ghcr.io/home-assistant/home-assistant:2026.7.4
+            after: ghcr.io/home-assistant/home-assistant:2026.7.4
+          # The same adoption, but starting from core's own HeaterCooler and its
+          # linked fan tile rather than a Thermostat.
+          - scenario: adopt
+            label: "2026.8"
+            before: ghcr.io/home-assistant/home-assistant:2026.8.0b3
+            after: ghcr.io/home-assistant/home-assistant:2026.8.0b3
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          repository: teh-hippo/ha-test-harness
+          path: harness
+
+      - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
+        with:
+          python-version: "3.14"
+
+      - name: Pair, change the bridge underneath, and reconnect
+        run: |
+          tests/harness/upgrade_smoke.sh \
+            --scenario "${{ matrix.scenario }}" \
+            --harness "$GITHUB_WORKSPACE/harness" \
+            --engine docker \
+            --name heatercooler-upgrade \
+            --before-image "${{ matrix.before }}" \
+            --after-image "${{ matrix.after }}" \
+            --workdir "${{ runner.temp }}/heatercooler-upgrade"
+
+      - name: Remove disposable bridge
+        if: always()
+        run: docker rm -f heatercooler-upgrade || true

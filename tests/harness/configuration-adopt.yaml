@@ -1,0 +1,28 @@
+homeassistant:
+  name: HeaterCooler Harness
+
+http:
+  server_port: 18127
+
+api:
+
+logger:
+  default: warning
+  logs:
+    custom_components.homekit_heatercooler: debug
+    homeassistant.components.homekit: info
+
+mock_climate:
+
+# The starting point for the adoption scenario: a bridge an existing user has
+# already paired, with the climate entity served entirely by core. There is
+# deliberately no homekit_heatercooler block and the integration is not copied
+# in, so core decides the accessory type on its own. The second phase adds both
+# and restarts against this same config directory.
+homekit:
+  - name: HC Harness Bridge
+    port: 21063
+    filter:
+      include_entities:
+        - climate.mock_daikin
+        - climate.mock_dual_swing
