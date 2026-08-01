@@ -17,7 +17,8 @@ dev = [
   "ha-ffmpeg>=3.2.2",
   "homekit-audio-proxy==1.2.1",
   "mypy>=1.15",
-  "pytest-homeassistant-custom-component>=0.13.316",
+  # Capped below 0.13.349, which pins a Home Assistant beta (2026.8.0b0).
+  "pytest-homeassistant-custom-component>=0.13.316,<0.13.349",
   "ruff>=0.13.0",
 ]
 

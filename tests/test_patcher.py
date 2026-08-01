@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterator
+from contextlib import contextmanager
 import logging
 from unittest.mock import patch
 
@@ -35,10 +37,33 @@ from homeassistant.core import HomeAssistant, State
 from tests.common import ENTITY_ID, set_climate
 
 SEVEN_FAN_MODES = ["Auto", "Low", "Mid", "High", "Low/Auto", "Mid/Auto", "High/Auto"]
+# Cores before 2026.8 have no CLIMATE_TYPES to import this from.
+TYPE_THERMOSTAT = "thermostat"
 
 
 def _state(**attributes: object) -> State:
     return State("climate.test", "cool", attributes)
+
+
+@contextmanager
+def legacy_core() -> Iterator[None]:
+    """Mask the core's native HeaterCooler so the bundled accessory is used.
+
+    Cores from 2026.8 map heater_cooler themselves, which makes the bundled
+    accessory unreachable. Pinning the pre-native shape keeps assertions about
+    the bundled accessory independent of the installed core, and restoring the
+    type registry stops the bundled registration leaking into other tests.
+    """
+    with (
+        patch.object(
+            homekit_accessories,
+            "CLIMATE_TYPES",
+            {TYPE_THERMOSTAT: "Thermostat"},
+            create=True,
+        ),
+        patch.dict(homekit_accessories.TYPES),
+    ):
+        yield
 
 
 def test_supports_heatercooler_with_fan_modes() -> None:
@@ -163,7 +188,7 @@ async def test_patch_skips_unconfigured_entities(
 async def test_patch_threads_configured_fan_lane(
     hass: HomeAssistant, hk_driver: object
 ) -> None:
-    """The fan lane chosen at apply time reaches the HeaterCooler accessory."""
+    """The fan lane chosen at apply time reaches the bundled HeaterCooler accessory."""
     set_climate(
         hass,
         HVACMode.COOL,
@@ -172,15 +197,17 @@ async def test_patch_threads_configured_fan_lane(
             ATTR_FAN_MODES: SEVEN_FAN_MODES,
         },
     )
-    apply_patch(hass, {ENTITY_ID}, set(), fan_lane=FAN_LANE_MANUAL)
-    try:
-        accessory = homekit_accessories.get_accessory(
-            hass, hk_driver, hass.states.get(ENTITY_ID), 2, {}
-        )
-        # The manual lane must win; the default auto lane would yield the /auto trio.
-        assert accessory.ordered_fan_speeds == ["low", "mid", "high"]
-    finally:
-        remove_patch(hass)
+    # Only the bundled accessory honours fan_lane, so mask native support.
+    with legacy_core():
+        apply_patch(hass, {ENTITY_ID}, set(), fan_lane=FAN_LANE_MANUAL)
+        try:
+            accessory = homekit_accessories.get_accessory(
+                hass, hk_driver, hass.states.get(ENTITY_ID), 2, {}
+            )
+            # The manual lane must win; the default auto lane yields the /auto trio.
+            assert accessory.ordered_fan_speeds == ["low", "mid", "high"]
+        finally:
+            remove_patch(hass)
 
 
 async def test_patch_routes_to_native_heatercooler(
