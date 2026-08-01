@@ -17,14 +17,15 @@ On 2026.8 and later this integration stops using its own accessory and routes th
 
 ### Known differences on core 2026.8
 
-Core's native HeaterCooler is not a like-for-like replacement for the legacy accessory. Because this integration hands over to core on 2026.8, these differences apply whether or not it stays installed, so check them against your hardware before you migrate:
+Core's native HeaterCooler is not a like-for-like replacement for the legacy accessory. Because this integration hands over to core on 2026.8, these differences apply whether or not it stays installed, so check them against your hardware before you migrate. Each was confirmed by pairing a real bridge over HomeKit and reading the accessory back.
 
-- Fan modes named `Mid` are dropped. Core recognises `low`, `middle`, `medium` and `high` only, so a `Low`/`Mid`/`High` unit collapses to a two position slider and `Mid` cannot be selected.
-- Units whose fan modes are all custom names get no fan slider at all. That includes the auto-referenced Daikin lane (`Low/Auto`, `Mid/Auto`, `High/Auto`) and labels such as `Quiet` and `Powerful`.
+- Fan modes named `Mid` are dropped. Core recognises `low`, `middle`, `medium` and `high` only, so a `Low`/`Mid`/`High` unit collapses to a two position slider and `Mid` cannot be selected. The auto-referenced lane (`Low/Auto`, `Mid/Auto`, `High/Auto`) is not recognised either.
+- Where the entity also exposes an `auto` fan mode, core moves the fan off the HeaterCooler tile onto a separate linked Fan tile. Fan control still exists, but it is a second tile in Apple Home rather than the slider on the HeaterCooler, and it still only offers the speeds core recognises.
+- Units with no `auto` fan mode and no recognised speed names, such as `Quiet` and `Powerful`, get no fan control at all.
 - Swing modes with custom names get no swing control.
 - A non-numeric or non-finite `min_temp` or `max_temp` raises while the accessory is being set up rather than being ignored.
 
-Core also adds capabilities the legacy accessory never had, most notably a linked Fan service with a real HomeKit auto toggle for units that expose an `auto` fan mode, and a current fan state indicator.
+Core also adds capabilities the legacy accessory never had: that linked Fan service carries a real HomeKit auto toggle and a current fan state indicator.
 
 ## Features
 
