@@ -11,21 +11,42 @@ Expose selected Home Assistant `climate` entities as a native **HeaterCooler** a
 
 Home Assistant's HomeKit Bridge maps `climate` entities to a Thermostat accessory. For air conditioners and heat pumps (for example, Daikin units), a native **HeaterCooler** tile is a better fit: one tile carries the mode, target temperature, cooling and heating thresholds, fan speed, and swing, with power as a separate control and an idle state once the room is at temperature.
 
-[Native HeaterCooler support](https://github.com/home-assistant/core/pull/148231) ships in Home Assistant 2026.8. This integration remains the legacy implementation for 2026.7.4 and earlier.
+[Native HeaterCooler support](https://github.com/home-assistant/core/pull/148231) ships in Home Assistant 2026.8. Core's version and this one are not equivalent, so this integration stays useful on both.
 
-On 2026.8 and later this integration stops using its own accessory and routes the entities you select through core's native HeaterCooler class instead. That keeps an existing configuration working while you migrate. In the HomeKit Bridge options, choose **Heater Cooler** for each selected climate entity, then remove this integration.
+This integration supports both core generations and keeps the same behaviour on each. Entities you select always use its own accessory, so the capabilities below do not change when you upgrade Home Assistant.
 
-### Known differences on core 2026.8
+### What this bridges
 
-Core's native HeaterCooler is not a like-for-like replacement for the legacy accessory. Because this integration hands over to core on 2026.8, these differences apply whether or not it stays installed, so check them against your hardware before you migrate. Each was confirmed by pairing a real bridge over HomeKit and reading the accessory back.
+Every cell was checked against the shipping cores, by pairing a real bridge over HomeKit and reading the accessory back.
 
-- Fan modes named `Mid` are dropped. Core recognises `low`, `middle`, `medium` and `high` only, so a `Low`/`Mid`/`High` unit collapses to a two position slider and `Mid` cannot be selected. The auto-referenced lane (`Low/Auto`, `Mid/Auto`, `High/Auto`) is not recognised either.
-- Where the entity also exposes an `auto` fan mode, core moves the fan off the HeaterCooler tile onto a separate linked Fan tile. Fan control still exists, but it is a second tile in Apple Home rather than the slider on the HeaterCooler, and it still only offers the speeds core recognises.
-- Units with no `auto` fan mode and no recognised speed names, such as `Quiet` and `Powerful`, get no fan control at all.
-- Swing modes with custom names get no swing control.
-- A non-numeric or non-finite `min_temp` or `max_temp` raises while the accessory is being set up rather than being ignored.
+| Capability | Native <= 2026.7 | Native 2026.8+ | With this integration |
+| --- | --- | --- | --- |
+| HeaterCooler tile | No, Thermostat only | Yes | Yes, on both |
+| Mode, thresholds, current temperature | Yes | Yes | Yes |
+| Fan slider for `low`/`medium`/`high` | Yes | Yes | Yes |
+| `Mid` fan speed | No | No | Yes |
+| Auto-referenced lane, `Low/Auto` and friends | No | No | Yes |
+| Choice of fan lane, auto or manual | No | No | Yes |
+| Custom fan names such as `Quiet` | No | No | Yes |
+| Custom swing names such as `3D` | No | No | Yes |
+| Fan on the climate tile itself | No, separate tile | No, separate tile | Yes |
+| Linked fan tile with a HomeKit auto toggle | Yes | Yes | No |
+| Survives a malformed `min_temp` or `max_temp` | No, raises | No, raises | Yes |
+| Per-entity selection from the UI | No, YAML only | No, YAML only | Yes |
+| Diagnostic sensor showing the active route | No | No | Yes |
 
-Core also adds capabilities the legacy accessory never had: that linked Fan service carries a real HomeKit auto toggle and a current fan state indicator.
+Both core generations recognise only `low`, `middle`, `medium` and `high` as fan speeds, so the gaps are the same on each. Core 2026.8 did not introduce them; it moved the shared helper out of the Thermostat accessory and carried them along.
+
+The one thing core does better is the linked fan tile. Where an entity exposes an `auto` fan mode, core puts the fan on its own tile with a real HomeKit auto toggle and a running indicator. Selecting an entity here trades that away in exchange for the speeds the entity actually advertises. If you would rather have core's fan handling for a given entity, leave it out of **Include entities**.
+
+For reference, the fan speeds each side offers:
+
+| Entity fan modes | Either core | With this integration |
+| --- | --- | --- |
+| `Low, Mid, High` | `low`, `high` | `low`, `mid`, `high` |
+| `Auto, Low/Auto, Mid/Auto, High/Auto` | `low`, `high` | the three `/auto` speeds |
+| `Quiet, Turbo` | none | `quiet`, `turbo` |
+| `Low, Medium, High` | `low`, `medium`, `high` | identical |
 
 ## Features
 
@@ -79,22 +100,26 @@ HomeKit's HeaterCooler tile has a single linear fan slider, so this integration 
 
 If the entity has no fan modes matching the chosen mode, its own fan modes are used as-is. Fan modes outside the chosen mode stay available from the underlying `climate` entity.
 
-This setting applies only to the legacy implementation. Core's native HeaterCooler keeps automatic fan control through a linked Fan service instead.
+This setting applies on every core generation, because selected entities always use this integration's accessory.
 
-### Migrating to native HomeKit support
+### Switching an entity to core's native accessory
 
-On Home Assistant 2026.8 and later:
+If you would rather have core's fan tile and its HomeKit auto toggle for a
+particular entity, on Home Assistant 2026.8 or later:
 
-1. Read **Known differences on core 2026.8** above and confirm none of them affect your unit.
-2. Open **Settings → Devices & Services → HomeKit Bridge → Configure**.
-3. Choose **Heater Cooler** for each climate entity currently selected here.
-4. Confirm the native accessory in Apple Home, then remove this integration.
+1. Remove the entity from **Include entities** here, or add it to **Exclude entities**.
+2. Open **Settings → Devices & Services → HomeKit Bridge → Configure** and choose
+   **Heater Cooler** for it.
+3. Confirm the accessory in Apple Home.
+
+Check the table above first. Core cannot represent `Mid`, the auto-referenced lane,
+or custom fan and swing names, so units relying on those lose them.
 
 ## How this patch works
 
 - You select one or more `climate` entities in this integration.
-- On legacy cores, those entities use this integration's **HeaterCooler** implementation.
-- On native cores, those entities use Home Assistant's built-in **HeaterCooler** implementation.
+- Those entities use this integration's **HeaterCooler** implementation, on every core generation.
+- Core's own HeaterCooler is left registered and untouched for everything else.
 - Everything else in HomeKit keeps its normal behavior.
 - Home Assistant core files are not changed on disk.
 
@@ -104,7 +129,7 @@ It keeps working across normal restarts while:
 - at least one target entity is configured in this integration
 - the target entities are included in HomeKit Bridge
 
-The diagnostic sensor reports whether the selected entities use the legacy or native route.
+The diagnostic sensor reports the active route and whether the running core has native support of its own.
 
 ## Development (uv)
 
