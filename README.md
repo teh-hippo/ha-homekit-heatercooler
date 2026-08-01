@@ -21,7 +21,7 @@ Every cell was checked against the shipping cores, by pairing a real bridge over
 
 | Capability | Native <= 2026.7 | Native 2026.8+ | With this integration |
 | --- | --- | --- | --- |
-| HeaterCooler tile | No, Thermostat only | Yes | Yes, on both |
+| HeaterCooler tile | No, Thermostat only | Only with two known fan speeds or a known swing mode | Yes, on both |
 | Mode, thresholds, current temperature | Yes | Yes | Yes |
 | Fan slider for `low`/`medium`/`high` | Yes | Yes | Yes |
 | `Mid` fan speed | No | No | Yes |
@@ -36,6 +36,10 @@ Every cell was checked against the shipping cores, by pairing a real bridge over
 | Diagnostic sensor showing the active route | No | No | Yes |
 
 Both core generations recognise only `low`, `middle`, `medium` and `high` as fan speeds, so the gaps are the same on each. Core 2026.8 did not introduce them; it moved the shared helper out of the Thermostat accessory and carried them along.
+
+Core 2026.8 also only reaches for a HeaterCooler on its own when the entity offers at least two of those speeds, or a swing mode it recognises ([`accessories.py`](https://github.com/home-assistant/core/blob/dev/homeassistant/components/homekit/accessories.py#L155)). A unit whose fan modes are all custom names gets a Thermostat unless you ask for **Heater Cooler** by hand.
+
+One caveat runs the other way. Core keeps entities with a target humidity setpoint on the Thermostat, because a HeaterCooler tile cannot carry one. Selecting such an entity here gives up that setpoint; the reported humidity still appears as a linked sensor.
 
 The one thing core does better is the linked fan tile. The two generations place the fan differently. On 2026.7 and below the Thermostat always moves the speed slider to a separate fan tile whenever core recognises any speed ([`type_thermostats.py`](https://github.com/home-assistant/core/blob/2026.7.4/homeassistant/components/homekit/type_thermostats.py#L262)). On 2026.8 the HeaterCooler keeps the slider on the climate tile and only splits it out when the entity exposes an `auto` fan mode ([`type_heater_coolers.py`](https://github.com/home-assistant/core/blob/dev/homeassistant/components/homekit/type_heater_coolers.py#L226)). Either way, the HomeKit auto toggle on that tile needs an `auto` fan mode. Selecting an entity here trades the separate tile away in exchange for the speeds the entity actually advertises. If you would rather have core's fan handling for a given entity, leave it out of **Include entities**.
 
@@ -141,7 +145,7 @@ Requires [uv](https://docs.astral.sh/uv/). Uses [Conventional Commits](https://w
 
 ### Hardware-free end-to-end smoke
 
-[`tests/harness/configuration.yaml`](tests/harness/configuration.yaml) configures the reusable [HA test harness](https://github.com/teh-hippo/ha-test-harness): it routes `Mock Daikin` through this integration while keeping `Mock Dual Swing` as a Thermostat. The native-core workflow uses [`tests/harness/configuration-native.yaml`](tests/harness/configuration-native.yaml), which pins both entities to Thermostat first so the selective override is proven rather than hidden by core's automatic routing.
+[`tests/harness/configuration.yaml`](tests/harness/configuration.yaml) configures the reusable [HA test harness](https://github.com/teh-hippo/ha-test-harness): it routes `Mock Daikin` through this integration while keeping `Mock Dual Swing` as a Thermostat. The native-core leg uses [`tests/harness/configuration-native.yaml`](tests/harness/configuration-native.yaml), which asks core for its own HeaterCooler on `Mock Daikin` so the override is proven against an explicit request rather than hidden by core's automatic routing.
 
 ```bash
 HARNESS_DIR=/path/to/ha-test-harness
@@ -151,7 +155,19 @@ HARNESS_DIR=/path/to/ha-test-harness
   --seed-config "$PWD/tests/harness/configuration.yaml"
 ```
 
-Use the harness’s [HomeKit smoke](https://github.com/teh-hippo/ha-test-harness/tree/master/homekit) to pair, assert the two accessory types, and unpair the disposable bridge. [`tests/harness/hap_write_smoke.py`](tests/harness/hap_write_smoke.py) verifies that a HAP target-mode write reaches Mock Daikin. The manual **HAP harness smoke** workflow runs both core generations, 2026.7.4 and 2026.8, and asserts they produce the same accessory shape.
+Use the harness's [HomeKit smoke](https://github.com/teh-hippo/ha-test-harness/tree/master/homekit) to pair, assert the two accessory types, and unpair the disposable bridge. [`tests/harness/hap_write_smoke.py`](tests/harness/hap_write_smoke.py) verifies that a HAP target-mode write reaches Mock Daikin. The **HAP harness smoke** workflow runs it against both core generations on every push to `master` and weekly, and asserts they produce the same accessory shape.
+
+### Upgrading an already-paired bridge
+
+Apple Home only refetches an accessory database when the HAP configuration number advances, so changing an entity's service type without that number moving would leave a stale tile. [`tests/harness/upgrade_smoke.sh`](tests/harness/upgrade_smoke.sh) pairs a disposable bridge, changes something underneath it, restarts against the same config directory, and reconnects with the persisted pairing:
+
+```bash
+tests/harness/upgrade_smoke.sh --scenario adopt \
+  --harness /path/to/ha-test-harness \
+  --before-image ghcr.io/home-assistant/home-assistant:2026.7.4
+```
+
+`--scenario core-upgrade` moves the core under an existing pairing and requires the accessory shape to hold. `--scenario adopt` starts with core serving the entity and then installs the integration, so the shape must change and the configuration number must move with it. Both assert the accessory id holds, the previous shape is gone rather than merged, and a write still lands on the reused pairing. This covers the HomeKit protocol contract; it cannot cover how the Home app chooses to render the result.
 
 ## License
 
