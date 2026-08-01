@@ -21,9 +21,6 @@ from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_LOW,
     DEFAULT_MAX_TEMP,
     DEFAULT_MIN_TEMP,
-    DOMAIN as CLIMATE_DOMAIN,
-    SERVICE_SET_FAN_MODE,
-    SERVICE_SET_SWING_MODE,
     SWING_OFF,
     ClimateEntityFeature,
     HVACMode,
@@ -201,12 +198,6 @@ class HomeKitClimateAccessory(HomeAccessory):
             return None
         return as_float(char.to_valid_value(value))
 
-    def _dispatch_climate_write(self, service: str, params: dict[str, Any]) -> None:
-        """Dispatch a non-batched climate service call."""
-        self.async_call_service(
-            CLIMATE_DOMAIN, service, {ATTR_ENTITY_ID: self.entity_id, **params}
-        )
-
     def _update_temperature_char(
         self, char: Characteristic, state: State, attr: str
     ) -> None:
@@ -270,11 +261,6 @@ class HomeKitClimateAccessory(HomeAccessory):
             )
         }
 
-    def _set_fan_speed(self, speed: Any) -> None:
-        """Set the fan mode for a rotation speed."""
-        if (params := self._fan_speed_params(speed)) is not None:
-            self._dispatch_climate_write(SERVICE_SET_FAN_MODE, params)
-
     def _swing_mode_params(self, swing_on: Any) -> dict[str, Any] | None:
         """Return swing-mode service data for a binary HomeKit write."""
         swing_value = as_hap_integer(swing_on)
@@ -283,11 +269,6 @@ class HomeKitClimateAccessory(HomeAccessory):
         return {
             ATTR_SWING_MODE: self.swing_on_mode if swing_value else self.swing_off_mode
         }
-
-    def _set_swing_mode(self, swing_on: Any) -> None:
-        """Set the climate swing mode."""
-        if (params := self._swing_mode_params(swing_on)) is not None:
-            self._dispatch_climate_write(SERVICE_SET_SWING_MODE, params)
 
     def _update_fan_speed_char(self, attributes: Mapping[str, Any]) -> None:
         """Update the rotation-speed characteristic."""

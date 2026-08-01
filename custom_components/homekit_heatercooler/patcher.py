@@ -44,7 +44,6 @@ class PatchState:
     include_entities: set[str]
     exclude_entities: set[str]
     fan_lane: str
-    native_support: bool
     original_get_accessory: GetAccessory
     original_homekit_get_accessory: GetAccessory
 
@@ -112,15 +111,12 @@ def apply_patch(
     fan_lane: str = DEFAULT_FAN_LANE,
 ) -> None:
     """Patch HomeKit get_accessory to expose selected climates as HeaterCooler."""
-    native_support = native_heatercooler_available()
-
     domain_data = hass.data.setdefault(DOMAIN, {})
     patch_state = domain_data.get(DATA_PATCH_STATE)
     if patch_state:
         patch_state.include_entities = include_entities
         patch_state.exclude_entities = exclude_entities
         patch_state.fan_lane = fan_lane
-        patch_state.native_support = native_support
         return
 
     original_get_accessory = homekit_accessories.get_accessory
@@ -137,7 +133,6 @@ def apply_patch(
         include_entities=include_entities,
         exclude_entities=exclude_entities,
         fan_lane=fan_lane,
-        native_support=native_support,
         original_get_accessory=original_get_accessory,
         original_homekit_get_accessory=original_homekit_get_accessory,
     )

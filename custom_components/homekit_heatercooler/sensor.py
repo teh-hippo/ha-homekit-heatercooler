@@ -6,10 +6,11 @@ from typing import Any
 
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
-from homeassistant.helpers.entity import DeviceInfo, EntityCategory
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import DATA_PATCH_STATUS, DOMAIN, SIGNAL_PATCH_STATUS_UPDATED
 
@@ -17,7 +18,7 @@ from .const import DATA_PATCH_STATUS, DOMAIN, SIGNAL_PATCH_STATUS_UPDATED
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up diagnostic entities for a config entry."""
     async_add_entities([HomeKitHeaterCoolerPatchedEntitiesSensor(entry)])
@@ -43,25 +44,16 @@ class HomeKitHeaterCoolerPatchedEntitiesSensor(SensorEntity):
 
     @property
     def extra_state_attributes(self) -> dict[str, Any]:
-        """Return patch diagnostics."""
-        status = self._patch_status
+        """Return patch diagnostics.
+
+        Passed straight through from the shared status, so a new diagnostic
+        needs adding in one place only and no key can silently fall back to a
+        default that contradicts what is actually in effect.
+        """
         return {
-            "patch_active": status.get("patch_active", False),
-            "hook_installed": status.get("hook_installed", False),
-            "native_support": status.get("native_support", False),
-            "routing_mode": status.get("routing_mode", "legacy"),
-            "fan_lane_supported": status.get("fan_lane_supported", True),
-            "include_entities": status.get("include_entities", []),
-            "exclude_entities": status.get("exclude_entities", []),
-            "target_entities": status.get("target_entities", []),
-            "patched_entities": status.get("patched_entities", []),
-            "currently_patchable_entities": status.get(
-                "currently_patchable_entities", []
-            ),
-            "missing_entities": status.get("missing_entities", []),
-            "unsupported_entities": status.get("unsupported_entities", []),
-            "non_climate_entities": status.get("non_climate_entities", []),
-            "last_refresh": status.get("last_refresh"),
+            key: value
+            for key, value in self._patch_status.items()
+            if key != "patched_entities_count"
         }
 
     @property
