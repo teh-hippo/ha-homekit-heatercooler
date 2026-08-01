@@ -1,6 +1,29 @@
 # CHANGELOG
 
 
+## v1.6.2 (2026-08-01)
+
+### Bug Fixes
+
+- Keep the swing toggle when an entity omits its swing mode
+  ([`1e958f0`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/1e958f03cc59dc0fa31074f24fc8b0f7395441d9))
+
+### Continuous Integration
+
+- Add a rolling beta harness leg and assert core capability
+  ([`33dccb3`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/33dccb31edafd9474bafaedffd8e225408b9b748))
+
+### Documentation
+
+- Correct where core puts the fan and widen the preflight
+  ([`19a1d70`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/19a1d702054afda2ec50dcacbcdd034a69b17318))
+
+### Testing
+
+- Prove an accessory swap under a paired bridge is safe
+  ([`757a2bd`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/757a2bd6e86d9418030ef1586d748adbc1e824ed))
+
+
 ## v1.6.1 (2026-08-01)
 
 ### Bug Fixes
