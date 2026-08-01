@@ -58,14 +58,34 @@ jobs:
       - run: uv run --no-sync mypy custom_components/homekit_heatercooler
 
   test:
-    name: Test
+    name: Test (${{ matrix.core }})
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - core: legacy
+            group: test-legacy
+            expect: "2026.7"
+          - core: native
+            group: test-native
+            expect: "2026.8"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
         with:
           python-version: "3.14"
-      - run: uv sync --locked
+          cache-suffix: ${{ matrix.group }}
+      - run: uv sync --locked --no-default-groups --group dev --group ${{ matrix.group }}
+      - name: Assert the intended Home Assistant version is installed
+        run: |
+          set -euo pipefail
+          actual="$(uv run --no-sync python -c 'from homeassistant.const import __version__ as v; print(v)')"
+          echo "Home Assistant $actual"
+          case "$actual" in
+            ${{ matrix.expect }}*) ;;
+            *) echo "expected ${{ matrix.expect }}.x, got $actual" >&2; exit 1 ;;
+          esac
       - run: uv run --no-sync coverage run -m pytest tests/ -v --tb=short
       - run: uv run --no-sync coverage report --include="custom_components/homekit_heatercooler/*" --fail-under=70
 
