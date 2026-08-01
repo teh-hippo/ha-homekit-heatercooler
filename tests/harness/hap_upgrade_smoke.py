@@ -118,17 +118,25 @@ def _read_state(url: str, token: str) -> str:
 
 
 async def _wait_for_state(
-    url: str, token: str, expected: str, timeout: float = 20
+    url: str, token: str, expected: str, timeout: float = 30
 ) -> None:
     loop = asyncio.get_running_loop()
     deadline = loop.time() + timeout
-    last_state: str | None = None
+    last: str = "never read"
     while loop.time() < deadline:
-        last_state = await asyncio.to_thread(_read_state, url, token)
-        if last_state == expected:
-            return
-        await asyncio.sleep(0.25)
-    raise RuntimeError(f"Mock Daikin state was {last_state!r}, expected {expected!r}")
+        # A restart can leave the API briefly unready, so transient failures
+        # inside the window are retried. The deadline still has to be met, so a
+        # write that genuinely never lands still fails.
+        try:
+            state = await asyncio.to_thread(_read_state, url, token)
+        except (RuntimeError, urllib.error.URLError, OSError) as err:
+            last = f"unreadable ({err})"
+        else:
+            if state == expected:
+                return
+            last = repr(state)
+        await asyncio.sleep(0.5)
+    raise RuntimeError(f"Mock Daikin state was {last}, expected {expected!r}")
 
 
 def _shape(accessory: Any) -> dict[str, Any]:
