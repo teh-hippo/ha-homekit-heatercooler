@@ -11,9 +11,20 @@ Expose selected Home Assistant `climate` entities as a native **HeaterCooler** a
 
 Home Assistant's HomeKit Bridge maps `climate` entities to a Thermostat accessory. For air conditioners and heat pumps (for example, Daikin units), a native **HeaterCooler** tile is a better fit: one tile carries the mode, target temperature, cooling and heating thresholds, fan speed, and swing, with power as a separate control and an idle state once the room is at temperature.
 
-[Native HeaterCooler support](https://github.com/home-assistant/core/pull/148231) is now merged into Home Assistant core `dev`. It was merged after Home Assistant 2026.7.2, so this integration remains the legacy implementation for that release and earlier versions.
+[Native HeaterCooler support](https://github.com/home-assistant/core/pull/148231) ships in Home Assistant 2026.8. This integration remains the legacy implementation for 2026.7.4 and earlier.
 
-Once Home Assistant includes native support, this integration routes the entities you select through core's native HeaterCooler class instead of replacing it. That keeps an existing configuration working while you migrate. In the HomeKit Bridge options, choose **Heater Cooler** for each selected climate entity, then remove this integration.
+On 2026.8 and later this integration stops using its own accessory and routes the entities you select through core's native HeaterCooler class instead. That keeps an existing configuration working while you migrate. In the HomeKit Bridge options, choose **Heater Cooler** for each selected climate entity, then remove this integration.
+
+### Known differences on core 2026.8
+
+Core's native HeaterCooler is not a like-for-like replacement for the legacy accessory. Because this integration hands over to core on 2026.8, these differences apply whether or not it stays installed, so check them against your hardware before you migrate:
+
+- Fan modes named `Mid` are dropped. Core recognises `low`, `middle`, `medium` and `high` only, so a `Low`/`Mid`/`High` unit collapses to a two position slider and `Mid` cannot be selected.
+- Units whose fan modes are all custom names get no fan slider at all. That includes the auto-referenced Daikin lane (`Low/Auto`, `Mid/Auto`, `High/Auto`) and labels such as `Quiet` and `Powerful`.
+- Swing modes with custom names get no swing control.
+- A non-numeric or non-finite `min_temp` or `max_temp` raises while the accessory is being set up rather than being ignored.
+
+Core also adds capabilities the legacy accessory never had, most notably a linked Fan service with a real HomeKit auto toggle for units that expose an `auto` fan mode, and a current fan state indicator.
 
 ## Features
 
@@ -71,11 +82,12 @@ This setting applies only to the legacy implementation. Core's native HeaterCool
 
 ### Migrating to native HomeKit support
 
-When your Home Assistant release includes native HeaterCooler support:
+On Home Assistant 2026.8 and later:
 
-1. Open **Settings → Devices & Services → HomeKit Bridge → Configure**.
-2. Choose **Heater Cooler** for each climate entity currently selected here.
-3. Confirm the native accessory in Apple Home, then remove this integration.
+1. Read **Known differences on core 2026.8** above and confirm none of them affect your unit.
+2. Open **Settings → Devices & Services → HomeKit Bridge → Configure**.
+3. Choose **Heater Cooler** for each climate entity currently selected here.
+4. Confirm the native accessory in Apple Home, then remove this integration.
 
 ## How this patch works
 
@@ -113,7 +125,7 @@ HARNESS_DIR=/path/to/ha-test-harness
   --seed-config "$PWD/tests/harness/configuration.yaml"
 ```
 
-Use the harness’s [HomeKit smoke](https://github.com/teh-hippo/ha-test-harness/tree/master/homekit) to pair, assert the two accessory types, and unpair the disposable bridge. [`tests/harness/hap_write_smoke.py`](tests/harness/hap_write_smoke.py) verifies that a HAP target-mode write reaches Mock Daikin. The manual **HAP harness smoke** workflow checks both the legacy 2026.7.2 route and the native core `dev` route.
+Use the harness’s [HomeKit smoke](https://github.com/teh-hippo/ha-test-harness/tree/master/homekit) to pair, assert the two accessory types, and unpair the disposable bridge. [`tests/harness/hap_write_smoke.py`](tests/harness/hap_write_smoke.py) verifies that a HAP target-mode write reaches Mock Daikin. The manual **HAP harness smoke** workflow checks both the legacy 2026.7.4 route and the native 2026.8 route.
 
 ## License
 
