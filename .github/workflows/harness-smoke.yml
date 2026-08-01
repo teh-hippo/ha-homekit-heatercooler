@@ -1,6 +1,16 @@
 name: HAP harness smoke
 
 on:
+  push:
+    branches: [master]
+    paths:
+      - "custom_components/**"
+      - "tests/harness/**"
+      - ".github/workflows/harness-smoke.yml"
+  schedule:
+    # Weekly, so a new Home Assistant release cannot quietly change the
+    # accessory shape without something failing.
+    - cron: "0 17 * * 0"
   workflow_dispatch:
 
 permissions:
