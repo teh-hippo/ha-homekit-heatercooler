@@ -29,11 +29,13 @@ jobs:
           - core: legacy
             image: ghcr.io/home-assistant/home-assistant:2026.7.4
             configuration: configuration.yaml
+            expect: "2026.7"
           # First release carrying native support. Move to 2026.8 once it is
           # tagged, tracked in issue #90.
           - core: native
             image: ghcr.io/home-assistant/home-assistant:2026.8.0b3
             configuration: configuration-native.yaml
+            expect: "2026.8"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 
@@ -63,6 +65,19 @@ jobs:
             --component "$GITHUB_WORKSPACE/harness/mocks/custom_components/mock_climate" \
             --component "$GITHUB_WORKSPACE/custom_components/homekit_heatercooler" \
             --seed-config "$GITHUB_WORKSPACE/tests/harness/$HARNESS_CONFIGURATION"
+
+      - name: Assert the intended Home Assistant version is running
+        env:
+          EXPECT: ${{ matrix.expect }}
+        run: |
+          set -euo pipefail
+          actual="$(docker exec -i heatercooler-harness \
+            python -c 'from homeassistant.const import __version__ as v; print(v)')"
+          echo "Home Assistant $actual"
+          case "$actual" in
+            "$EXPECT"*) ;;
+            *) echo "expected ${EXPECT}.x, got $actual" >&2; exit 1 ;;
+          esac
 
       - name: Pair and verify the bridge
         env:

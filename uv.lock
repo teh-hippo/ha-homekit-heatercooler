@@ -6,9 +6,6 @@ conflicts = [[
     { package = "ha-homekit-heatercooler", group = "test-native" },
 ]]
 
-[options]
-prerelease-mode = "allow"
-
 [manifest]
 overrides = [
     { name = "pyjwt", specifier = ">=2.12.0" },
@@ -1079,6 +1076,7 @@ test-legacy = [
     { name = "pytest-homeassistant-custom-component", version = "0.13.348", source = { registry = "https://pypi.org/simple" } },
 ]
 test-native = [
+    { name = "homeassistant", version = "2026.8.0b3", source = { registry = "https://pypi.org/simple" } },
     { name = "pytest-homeassistant-custom-component", version = "0.13.351", source = { registry = "https://pypi.org/simple" } },
 ]
 
@@ -1098,7 +1096,10 @@ dev = [
     { name = "ruff", specifier = ">=0.13.0" },
 ]
 test-legacy = [{ name = "pytest-homeassistant-custom-component", specifier = "==0.13.348" }]
-test-native = [{ name = "pytest-homeassistant-custom-component", specifier = "==0.13.351" }]
+test-native = [
+    { name = "homeassistant", specifier = "==2026.8.0b3" },
+    { name = "pytest-homeassistant-custom-component", specifier = "==0.13.351" },
+]
 
 [[package]]
 name = "habluetooth"

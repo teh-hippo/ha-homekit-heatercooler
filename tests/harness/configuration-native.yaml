@@ -22,8 +22,10 @@ homekit:
         - climate.mock_daikin
         - climate.mock_dual_swing
     entity_config:
+      # Ask core for its own HeaterCooler. Without the patch this yields core's
+      # accessory and its linked Fanv2, which is what the smoke asserts against.
       climate.mock_daikin:
-        type: thermostat
+        type: heater_cooler
       climate.mock_dual_swing:
         type: thermostat
 
