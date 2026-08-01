@@ -110,6 +110,11 @@ fi
 
 start_ha() {
     local image="$1" with_integration="$2"
+    # Home Assistant runs as root and leaves root-owned bytecode inside the
+    # copied components, which ha-bench.sh cannot clear as the invoking user.
+    # Clearing the directory here keeps each phase's component set exact and
+    # lets the sudo fallback deal with the ownership.
+    force_rm "$CONFIG/custom_components"
     local args=(
         --engine "$ENGINE"
         --name "$NAME"
@@ -121,10 +126,6 @@ start_ha() {
     )
     if [[ "$with_integration" -eq 1 ]]; then
         args+=(--component "$REPO/custom_components/homekit_heatercooler")
-    else
-        # ha-bench.sh only ever adds components, so an earlier phase's copy has
-        # to be cleared by hand or the "core only" phase would not be core only.
-        force_rm "$CONFIG/custom_components/homekit_heatercooler"
     fi
     "$HARNESS/podman/ha-bench.sh" "${args[@]}"
 }
