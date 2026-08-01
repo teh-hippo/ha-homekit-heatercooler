@@ -17,10 +17,13 @@ dev = [
   "ha-ffmpeg>=3.2.2",
   "homekit-audio-proxy==1.2.1",
   "mypy>=1.15",
-  # Capped below 0.13.349, which pins a Home Assistant beta (2026.8.0b0).
-  "pytest-homeassistant-custom-component>=0.13.316,<0.13.349",
   "ruff>=0.13.0",
 ]
+# Home Assistant only arrives through pytest-homeassistant-custom-component, so
+# these two groups are how the suite gets pinned to one core generation or the
+# other. They are mutually exclusive by construction.
+test-legacy = ["pytest-homeassistant-custom-component==0.13.348"]
+test-native = ["pytest-homeassistant-custom-component==0.13.351"]
 
 [tool.mypy]
 python_version = "3.14"
@@ -59,6 +62,10 @@ fail_under = 70
 
 [tool.uv]
 override-dependencies = ["pytest>=9.0.3", "PyJWT>=2.12.0"]
+conflicts = [[{ group = "test-legacy" }, { group = "test-native" }]]
+default-groups = ["dev", "test-legacy"]
+# 2026.8 is still a pre-release; the native group cannot resolve without this.
+prerelease = "allow"
 
 [tool.semantic_release]
 version_toml = ["pyproject.toml:project.version"]
