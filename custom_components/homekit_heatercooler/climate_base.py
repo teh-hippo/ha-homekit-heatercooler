@@ -307,7 +307,10 @@ class HomeKitClimateAccessory(HomeAccessory):
         """Update the swing characteristic."""
         if self.char_swing is None or self.swing_on_mode is None:
             return
-        swing_mode = attributes.get(ATTR_SWING_MODE)
+        # An absent swing mode keeps the last value; there is nothing to show,
+        # and reporting off would assert a state the entity never gave us.
+        if not (swing_mode := attributes.get(ATTR_SWING_MODE)):
+            return
         enabled = is_swing_on(swing_mode) or (
             isinstance(swing_mode, str)
             and swing_mode.lower() == self.swing_on_mode.lower()

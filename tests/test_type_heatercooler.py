@@ -37,6 +37,8 @@ from homeassistant.components.climate import (
     ATTR_HVAC_MODES,
     ATTR_MAX_TEMP,
     ATTR_MIN_TEMP,
+    ATTR_SWING_MODE,
+    ATTR_SWING_MODES,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     ATTR_TEMPERATURE,
@@ -644,3 +646,35 @@ async def test_entity_without_off_mode_stays_active_and_applies_target(
     assert accessory.char_active.value == 1
     assert hvac_calls[-1].data[ATTR_HVAC_MODE] == HVACMode.HEAT
     assert temperature_calls[-1].data[ATTR_TEMPERATURE] == 20
+
+
+async def test_absent_swing_mode_keeps_the_last_reported_value(
+    hass: HomeAssistant, hk_driver: object
+) -> None:
+    """An entity that drops the attribute must not read as swing off.
+
+    Reporting off would assert a state the entity never gave us, and the Home
+    app would show the toggle flipping on its own.
+    """
+    swing = {
+        ATTR_SUPPORTED_FEATURES: (
+            ClimateEntityFeature.FAN_MODE
+            | ClimateEntityFeature.TARGET_TEMPERATURE
+            | ClimateEntityFeature.SWING_MODE
+        ),
+        ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF],
+        ATTR_SWING_MODES: ["off", "on"],
+    }
+    set_climate(hass, HVACMode.COOL, **swing, **{ATTR_SWING_MODE: "on"})
+    accessory = _accessory(hass, hk_driver)
+    accessory.async_update_state(hass.states.get(ENTITY_ID))
+    assert accessory.char_swing is not None
+    assert accessory.char_swing.value == 1
+
+    set_climate(hass, HVACMode.COOL, **swing)
+    accessory.async_update_state(hass.states.get(ENTITY_ID))
+    assert accessory.char_swing.value == 1
+
+    set_climate(hass, HVACMode.COOL, **swing, **{ATTR_SWING_MODE: "off"})
+    accessory.async_update_state(hass.states.get(ENTITY_ID))
+    assert accessory.char_swing.value == 0
