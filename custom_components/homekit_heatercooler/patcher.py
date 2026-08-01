@@ -15,7 +15,7 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
 )
 from homeassistant.components.homekit import accessories as homekit_accessories
-from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME, CONF_TYPE
+from homeassistant.const import ATTR_SUPPORTED_FEATURES, CONF_NAME
 from homeassistant.core import HomeAssistant, State
 
 from .climate_util import as_float
@@ -92,12 +92,17 @@ def native_heatercooler_available() -> bool:
     )
 
 
-def _register_legacy_type() -> bool:
-    """Register the bundled type only on cores without native support."""
-    from .type_heatercooler import register_legacy_type
+def _bundled_heatercooler() -> type[homekit_accessories.HomeAccessory]:
+    """Return the bundled accessory class.
 
-    register_legacy_type()
-    return "HeaterCooler" in homekit_accessories.TYPES
+    Deliberately imported rather than looked up in HomeKit's TYPES registry.
+    Cores from 2026.8 register their own HeaterCooler there, and replacing it
+    would hijack every entity using it, including ones this integration was
+    never told about.
+    """
+    from .type_heatercooler import HeaterCooler
+
+    return HeaterCooler
 
 
 def apply_patch(
@@ -108,16 +113,6 @@ def apply_patch(
 ) -> None:
     """Patch HomeKit get_accessory to expose selected climates as HeaterCooler."""
     native_support = native_heatercooler_available()
-    if not native_support and not _register_legacy_type():
-        _LOGGER.error(
-            "HeaterCooler accessory type is not registered; leaving HomeKit untouched"
-        )
-        return
-
-    if native_support and fan_lane != DEFAULT_FAN_LANE:
-        _LOGGER.warning(
-            "fan_lane is ignored while HomeKit's native HeaterCooler support is active"
-        )
 
     domain_data = hass.data.setdefault(DOMAIN, {})
     patch_state = domain_data.get(DATA_PATCH_STATE)
@@ -166,14 +161,9 @@ def apply_patch(
                 )
                 and supports_heatercooler(state)
             ):
-                if patch_state.native_support:
-                    native_config = {**config, CONF_TYPE: TYPE_HEATER_COOLER}
-                    return patch_state.original_get_accessory(
-                        hass, driver, state, aid, native_config
-                    )
                 name = config.get(CONF_NAME, state.name)
                 hc_config = {**config, CONF_FAN_LANE: patch_state.fan_lane}
-                return homekit_accessories.TYPES["HeaterCooler"](
+                return _bundled_heatercooler()(
                     hass, driver, name, state.entity_id, aid, hc_config
                 )
         except Exception:
