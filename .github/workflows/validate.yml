@@ -66,10 +66,10 @@ jobs:
         include:
           - core: legacy
             group: test-legacy
-            expect: "2026.7"
+            native: "no"
           - core: native
             group: test-native
-            expect: "2026.8"
+            native: "yes"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       - uses: astral-sh/setup-uv@c771a70e6277c0a99b617c7a806ffedaca235ff9 # v9.0.0
@@ -77,15 +77,30 @@ jobs:
           python-version: "3.14"
           cache-suffix: ${{ matrix.group }}
       - run: uv sync --locked --no-default-groups --group dev --group ${{ matrix.group }}
-      - name: Assert the intended Home Assistant version is installed
+      # Guards against a dependency bump silently swapping core generations,
+      # which is exactly how the beta first arrived. Asserting the presence of
+      # native HeaterCooler rather than a version prefix tests the property
+      # that decides which code path this leg covers.
+      - name: Assert the core generation under test
+        env:
+          EXPECT_NATIVE: ${{ matrix.native }}
         run: |
           set -euo pipefail
-          actual="$(uv run --no-sync python -c 'from homeassistant.const import __version__ as v; print(v)')"
-          echo "Home Assistant $actual"
-          case "$actual" in
-            ${{ matrix.expect }}*) ;;
-            *) echo "expected ${{ matrix.expect }}.x, got $actual" >&2; exit 1 ;;
-          esac
+          version="$(uv run --no-sync python -c 'from homeassistant.const import __version__ as v; print(v)')"
+          native="$(uv run --no-sync python -c '
+          import importlib.util
+
+          spec = importlib.util.find_spec(
+              "homeassistant.components.homekit.type_heater_coolers"
+          )
+          print("yes" if spec else "no")
+          ' 2>/dev/null)"
+          echo "Home Assistant $version (native HeaterCooler: $native)"
+          if [ "$native" != "$EXPECT_NATIVE" ]; then
+            echo "::error::${{ matrix.core }} leg expected native HeaterCooler" \
+              "$EXPECT_NATIVE, got $native on $version" >&2
+            exit 1
+          fi
       - run: uv run --no-sync coverage run -m pytest tests/ -v --tb=short
       - run: uv run --no-sync coverage report --include="custom_components/homekit_heatercooler/*" --fail-under=70
 
