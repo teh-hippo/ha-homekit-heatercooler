@@ -27,7 +27,7 @@ test-legacy = ["pytest-homeassistant-custom-component==0.13.348"]
 # in beta. A global prerelease allowance would apply to every other package too.
 test-native = [
   "pytest-homeassistant-custom-component==0.13.351",
-  "homeassistant==2026.8.0b3",
+  "homeassistant==2026.8.0b4",
 ]
 
 [tool.mypy]
