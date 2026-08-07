@@ -23,12 +23,7 @@ dev = [
 # these two groups are how the suite gets pinned to one core generation or the
 # other. They are mutually exclusive by construction.
 test-legacy = ["pytest-homeassistant-custom-component==0.13.348"]
-# The explicit pre-release pin is what lets uv resolve 2026.8 while it is still
-# in beta. A global prerelease allowance would apply to every other package too.
-test-native = [
-  "pytest-homeassistant-custom-component==0.13.351",
-  "homeassistant==2026.8.0b3",
-]
+test-native = ["pytest-homeassistant-custom-component==0.13.354"]
 
 [tool.mypy]
 python_version = "3.14"
