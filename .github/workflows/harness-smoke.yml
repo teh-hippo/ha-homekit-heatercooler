@@ -30,17 +30,13 @@ jobs:
           # covering the generation this leg exists to cover.
           - core: legacy
             image: ghcr.io/home-assistant/home-assistant:2026.7.4
-            rolling: ""
             configuration: configuration.yaml
             native: "no"
-          # First release carrying native support. Pinned for push runs so a
-          # commit always resolves to the same core, and swapped for the
-          # rolling beta tag on the weekly run so a pre-release change cannot
-          # land unseen. Both the pin and the rolling override go away once
-          # 2026.8.0 is tagged, tracked in issue #90.
+          # First stable release line carrying native support. This tracks
+          # 2026.8 patch releases while the legacy leg stays fixed at the last
+          # core without native HeaterCooler support.
           - core: native
-            image: ghcr.io/home-assistant/home-assistant:2026.8.0b3
-            rolling: ghcr.io/home-assistant/home-assistant:beta
+            image: ghcr.io/home-assistant/home-assistant:2026.8
             configuration: configuration-native.yaml
             native: "yes"
     steps:
@@ -58,7 +54,7 @@ jobs:
       - name: Start the disposable Home Assistant bridge
         env:
           CONFIG: ${{ runner.temp }}/heatercooler-harness
-          HA_IMAGE: ${{ (github.event_name == 'schedule' && matrix.rolling) || matrix.image }}
+          HA_IMAGE: ${{ matrix.image }}
           HARNESS_CONFIGURATION: ${{ matrix.configuration }}
         run: |
           set -euo pipefail
@@ -182,7 +178,7 @@ jobs:
           - scenario: core-upgrade
             label: 2026.7 to 2026.8
             before: ghcr.io/home-assistant/home-assistant:2026.7.4
-            after: ghcr.io/home-assistant/home-assistant:2026.8.0b3
+            after: ghcr.io/home-assistant/home-assistant:2026.8
           # An existing user installs the integration. Core serves a Thermostat
           # on this generation, so the service type changes outright.
           - scenario: adopt
@@ -193,8 +189,8 @@ jobs:
           # linked fan tile rather than a Thermostat.
           - scenario: adopt
             label: "2026.8"
-            before: ghcr.io/home-assistant/home-assistant:2026.8.0b3
-            after: ghcr.io/home-assistant/home-assistant:2026.8.0b3
+            before: ghcr.io/home-assistant/home-assistant:2026.8
+            after: ghcr.io/home-assistant/home-assistant:2026.8
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
 

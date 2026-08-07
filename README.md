@@ -55,7 +55,7 @@ For reference, the fan speeds each side offers:
 ## Features
 
 - Native HomeKit **HeaterCooler** service for selected climates
-- Uses core's native implementation automatically when it is available
+- Uses the bundled implementation on every supported core generation
 - Maps HVAC mode, active state, thresholds, fan speed, and swing mode
 - Configurable fan slider mode on legacy cores
 - Supports single setpoint and dual threshold climates
