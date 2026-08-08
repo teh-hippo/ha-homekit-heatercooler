@@ -22,7 +22,7 @@ dev = [
 # Home Assistant only arrives through pytest-homeassistant-custom-component, so
 # these two groups are how the suite gets pinned to one core generation or the
 # other. They are mutually exclusive by construction.
-test-legacy = ["pytest-homeassistant-custom-component==0.13.348"]
+test-legacy = ["pytest-homeassistant-custom-component==0.13.353"]
 test-native = ["pytest-homeassistant-custom-component==0.13.354"]
 
 [tool.mypy]
