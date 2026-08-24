@@ -1,6 +1,14 @@
 # CHANGELOG
 
 
+## v1.6.5 (2026-08-24)
+
+### Bug Fixes
+
+- **deps**: Preserve legacy compatibility boundary
+  ([`720ba59`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/720ba59a47f20bdc8846518f529d5f08a7159e6b))
+
+
 ## v1.6.4 (2026-08-24)
 
 ### Bug Fixes

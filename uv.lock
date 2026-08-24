@@ -1103,7 +1103,7 @@ wheels = [
 
 [[package]]
 name = "ha-homekit-heatercooler"
-version = "1.6.4"
+version = "1.6.5"
 source = { virtual = "." }
 
 [package.dev-dependencies]
