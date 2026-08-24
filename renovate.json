@@ -1,4 +1,13 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
-  "extends": ["github>teh-hippo/common-repo-configs//renovate/default.json5"]
+  "extends": ["github>teh-hippo/common-repo-configs//renovate/default.json5"],
+  "packageRules": [
+    {
+      "description": "Preserve the pre-native HomeKit HeaterCooler compatibility leg",
+      "matchManagers": ["pep621"],
+      "matchPackageNames": ["pytest-homeassistant-custom-component"],
+      "matchCurrentValue": "/^==0\\.13\\.348$/",
+      "enabled": false
+    }
+  ]
 }
