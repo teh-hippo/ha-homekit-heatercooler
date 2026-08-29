@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyhap.characteristic import Characteristic
 from pyhap.const import CATEGORY_THERMOSTAT
@@ -25,6 +25,11 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
+from homeassistant.components.fan import (
+    ATTR_PERCENTAGE,
+    ATTR_PERCENTAGE_STEP,
+    SERVICE_SET_PERCENTAGE,
+)
 from homeassistant.components.homekit.accessories import HomeAccessory
 from homeassistant.components.homekit.const import (
     ATTR_DISPLAY_NAME,
@@ -39,11 +44,13 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SERVICE,
     ATTR_SUPPORTED_FEATURES,
+    SERVICE_TURN_OFF,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
-from homeassistant.core import Context, State
+from homeassistant.core import Context, Event, EventStateChangedData, State, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.event import async_track_state_change_event
 
 from .climate_util import (
     as_float,
@@ -61,6 +68,7 @@ from .climate_util import (
 )
 from .const import (
     CHAR_CURRENT_TEMPERATURE,
+    CONF_FAN_ENTITY_ID,
     CONF_FAN_LANE,
     DEFAULT_FAN_LANE,
     PROP_MAX_VALUE,
@@ -91,7 +99,22 @@ class HomeKitClimateAccessory(HomeAccessory):
 
         self.fan_modes: dict[str, str] = {}
         self.ordered_fan_speeds: list[str] = []
-        if features & ClimateEntityFeature.FAN_MODE:
+        self.fan_entity_id: str | None = None
+        self._fan_percentage_step: float = 1.0
+        configured_fan_entity_id = self.config.get(CONF_FAN_ENTITY_ID)
+        if (
+            isinstance(configured_fan_entity_id, str)
+            and configured_fan_entity_id.startswith("fan.")
+        ):
+            # A linked fan entity replaces climate fan_modes entirely: the
+            # slider tracks that entity's own percentage, not a guess mapped
+            # from the climate entity's fan_modes strings.
+            self.fan_entity_id = configured_fan_entity_id
+            if (fan_state := self.hass.states.get(self.fan_entity_id)) is not None:
+                self._fan_percentage_step = (
+                    as_float(fan_state.attributes.get(ATTR_PERCENTAGE_STEP)) or 1.0
+                )
+        elif features & ClimateEntityFeature.FAN_MODE:
             fan_lane = self.config.get(CONF_FAN_LANE, DEFAULT_FAN_LANE)
             self.fan_modes, self.ordered_fan_speeds = get_fan_modes_and_speeds(
                 attributes, fan_lane
@@ -120,6 +143,44 @@ class HomeKitClimateAccessory(HomeAccessory):
         return get_temperature_range_from_state(
             state, self._unit, DEFAULT_MIN_TEMP, DEFAULT_MAX_TEMP
         )
+
+    @callback
+    @override
+    def run(self) -> None:
+        """Track the linked fan entity alongside the primary climate entity.
+
+        HomeKit's own accessory framework only watches self.entity_id; a
+        linked fan lives at a different entity_id and needs its own
+        subscription so RotationSpeed reflects it without waiting for the
+        climate entity to also report a change.
+        """
+        super().run()
+        if self.fan_entity_id is not None:
+            self._subscriptions.append(
+                async_track_state_change_event(
+                    self.hass,
+                    [self.fan_entity_id],
+                    self._async_fan_entity_state_changed,
+                )
+            )
+            self._sync_fan_entity_speed()
+
+    @callback
+    def _async_fan_entity_state_changed(
+        self, _event: Event[EventStateChangedData]
+    ) -> None:
+        """Refresh RotationSpeed when the linked fan entity changes on its own."""
+        self._sync_fan_entity_speed()
+
+    def _sync_fan_entity_speed(self) -> None:
+        """Set RotationSpeed from the linked fan entity's current percentage."""
+        if self.char_speed is None or self.fan_entity_id is None:
+            return
+        fan_state = self.hass.states.get(self.fan_entity_id)
+        if fan_state is None:
+            return
+        if (percentage := as_float(fan_state.attributes.get(ATTR_PERCENTAGE))) is not None:
+            self.char_speed.set_value(percentage)
 
     async def async_call_service_and_wait(
         self,
@@ -261,6 +322,26 @@ class HomeKitClimateAccessory(HomeAccessory):
             )
         }
 
+    def _fan_entity_speed_params(self, speed: Any) -> tuple[str, dict[str, Any]] | None:
+        """Return the fan-domain service name and data for a rotation speed.
+
+        Unlike `_fan_speed_params`, this drives a `fan.` entity's own
+        percentage directly rather than mapping through climate fan_modes,
+        so any percentage-capable fan works without a name-based lookup.
+        """
+        if self.char_speed is None or self.fan_entity_id is None:
+            return None
+        speed_value = as_hap_integer(
+            self._coerce_numeric_char_write(self.char_speed, speed)
+        )
+        if speed_value is None or not 0 <= speed_value <= 100:
+            return None
+        if speed_value == 0:
+            return (SERVICE_TURN_OFF, {})
+        step = self._fan_percentage_step or 1.0
+        snapped = min(100.0, max(step, round(speed_value / step) * step))
+        return (SERVICE_SET_PERCENTAGE, {ATTR_PERCENTAGE: snapped})
+
     def _swing_mode_params(self, swing_on: Any) -> dict[str, Any] | None:
         """Return swing-mode service data for a binary HomeKit write."""
         swing_value = as_hap_integer(swing_on)
@@ -271,17 +352,22 @@ class HomeKitClimateAccessory(HomeAccessory):
         }
 
     def _update_fan_speed_char(self, attributes: Mapping[str, Any]) -> None:
-        """Update the rotation-speed characteristic."""
-        if (
-            self.char_speed is not None
-            and self.ordered_fan_speeds
-            and (
-                speed := fan_mode_to_speed(
-                    self.ordered_fan_speeds, attributes.get(ATTR_FAN_MODE)
-                )
+        """Update the rotation-speed characteristic.
+
+        `attributes` is the climate entity's own attributes, used only for
+        the climate fan_modes path; a linked fan entity is read from its own
+        state instead, since its percentage never appears there.
+        """
+        if self.char_speed is None:
+            return
+        if self.fan_entity_id is not None:
+            self._sync_fan_entity_speed()
+            return
+        if self.ordered_fan_speeds and (
+            speed := fan_mode_to_speed(
+                self.ordered_fan_speeds, attributes.get(ATTR_FAN_MODE)
             )
-            is not None
-        ):
+        ) is not None:
             self.char_speed.set_value(speed)
 
     def _update_swing_char(self, attributes: Mapping[str, Any]) -> None:
