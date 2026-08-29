@@ -13,7 +13,9 @@ from homeassistant.helpers.entityfilter import (
     CONF_INCLUDE_ENTITIES,
 )
 
+from .climate_util import normalize_fan_entity_map
 from .const import (
+    CONF_FAN_ENTITIES,
     CONF_FAN_LANE,
     DEFAULT_FAN_LANE,
     DOMAIN,
@@ -23,7 +25,7 @@ from .const import (
 
 
 def _normalize_input(user_input: dict[str, Any]) -> dict[str, Any]:
-    """Normalize entity lists and fan lane from user input."""
+    """Normalize entity lists, fan lane, and fan entity map from user input."""
     include_entities = sorted(
         set(_list_of_strings(user_input.get(CONF_INCLUDE_ENTITIES)))
     )
@@ -37,6 +39,7 @@ def _normalize_input(user_input: dict[str, Any]) -> dict[str, Any]:
         CONF_FAN_LANE: lane
         if lane in (FAN_LANE_AUTO, FAN_LANE_MANUAL)
         else DEFAULT_FAN_LANE,
+        CONF_FAN_ENTITIES: normalize_fan_entity_map(user_input.get(CONF_FAN_ENTITIES)),
     }
 
 
@@ -48,9 +51,12 @@ def _list_of_strings(value: Any) -> list[str]:
 
 
 def _build_schema(
-    include_entities: list[str], exclude_entities: list[str], fan_lane: str
+    include_entities: list[str],
+    exclude_entities: list[str],
+    fan_lane: str,
+    fan_entities: dict[str, str],
 ) -> vol.Schema:
-    """Build the form schema for include/exclude entities and fan lane."""
+    """Build the form schema for include/exclude entities, fan lane, and fan map."""
     climate_selector = selector.EntitySelector(
         selector.EntitySelectorConfig(
             domain="climate",
@@ -72,6 +78,12 @@ def _build_schema(
                     mode=selector.SelectSelectorMode.DROPDOWN,
                 )
             ),
+            # A raw mapping editor: HA has no built-in "pick a fan entity per
+            # climate entity" widget, so entries are climate_entity_id keyed
+            # to a fan_entity_id value, e.g. {"climate.living": "fan.living"}.
+            vol.Optional(
+                CONF_FAN_ENTITIES, default=fan_entities
+            ): selector.ObjectSelector(),
         }
     )
 
@@ -92,7 +104,10 @@ class HomeKitHeaterCoolerConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="user",
             data_schema=_build_schema(
-                include_entities=[], exclude_entities=[], fan_lane=DEFAULT_FAN_LANE
+                include_entities=[],
+                exclude_entities=[],
+                fan_lane=DEFAULT_FAN_LANE,
+                fan_entities={},
             ),
         )
 
@@ -117,7 +132,10 @@ class HomeKitHeaterCoolerOptionsFlow(OptionsFlow):
         include_entities = _list_of_strings(source.get(CONF_INCLUDE_ENTITIES))
         exclude_entities = _list_of_strings(source.get(CONF_EXCLUDE_ENTITIES))
         fan_lane = source.get(CONF_FAN_LANE, DEFAULT_FAN_LANE)
+        fan_entities = normalize_fan_entity_map(source.get(CONF_FAN_ENTITIES))
         return self.async_show_form(
             step_id="init",
-            data_schema=_build_schema(include_entities, exclude_entities, fan_lane),
+            data_schema=_build_schema(
+                include_entities, exclude_entities, fan_lane, fan_entities
+            ),
         )

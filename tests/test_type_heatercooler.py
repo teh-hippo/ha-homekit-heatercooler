@@ -8,6 +8,7 @@ import pytest
 from pytest_homeassistant_custom_component.common import async_mock_service
 
 from custom_components.homekit_heatercooler.const import (
+    CONF_FAN_ENTITY_ID,
     CONF_FAN_LANE,
     FAN_LANE_AUTO,
     FAN_LANE_MANUAL,
@@ -50,8 +51,16 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
+from homeassistant.components.fan import (
+    ATTR_PERCENTAGE,
+    ATTR_PERCENTAGE_STEP,
+    DOMAIN as FAN_DOMAIN,
+    SERVICE_SET_PERCENTAGE,
+)
 from homeassistant.const import (
+    ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
+    SERVICE_TURN_OFF,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -678,3 +687,115 @@ async def test_absent_swing_mode_keeps_the_last_reported_value(
     set_climate(hass, HVACMode.COOL, **swing, **{ATTR_SWING_MODE: "off"})
     accessory.async_update_state(hass.states.get(ENTITY_ID))
     assert accessory.char_swing.value == 0
+
+
+FAN_ENTITY_ID = "fan.living"
+
+
+def _set_fan(hass: HomeAssistant, percentage: int, **extra: object) -> None:
+    """Register the linked fan entity, independent of the climate entity."""
+    attributes: dict[str, object] = {
+        ATTR_PERCENTAGE: percentage,
+        ATTR_PERCENTAGE_STEP: 100 / 3,
+    }
+    attributes.update(extra)
+    hass.states.async_set(FAN_ENTITY_ID, "on" if percentage else "off", attributes)
+
+
+async def test_fan_entity_override_exposes_rotation_speed_without_climate_fan_modes(
+    hass: HomeAssistant, hk_driver: object
+) -> None:
+    """A configured fan entity drives RotationSpeed even without climate fan_modes."""
+    set_climate(
+        hass,
+        HVACMode.COOL,
+        **{
+            ATTR_SUPPORTED_FEATURES: 0,
+            ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF],
+            ATTR_FAN_MODES: None,
+        },
+    )
+    _set_fan(hass, 66)
+    accessory = _accessory(hass, hk_driver, {CONF_FAN_ENTITY_ID: FAN_ENTITY_ID})
+
+    assert accessory.fan_entity_id == FAN_ENTITY_ID
+    assert accessory.ordered_fan_speeds == []
+    assert accessory.char_speed is not None
+    assert accessory.char_speed.value == 66
+    assert accessory.char_speed.properties["minStep"] == pytest.approx(100 / 3)
+
+
+async def test_fan_entity_override_writes_target_domain_and_percentage(
+    hass: HomeAssistant, hk_driver: object
+) -> None:
+    """RotationSpeed writes call fan.set_percentage on the linked entity."""
+    set_climate(hass, HVACMode.COOL, **{ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF]})
+    _set_fan(hass, 0)
+    accessory = _accessory(hass, hk_driver, {CONF_FAN_ENTITY_ID: FAN_ENTITY_ID})
+    fan_calls = async_mock_service(hass, FAN_DOMAIN, SERVICE_SET_PERCENTAGE)
+    climate_fan_calls = async_mock_service(hass, CLIMATE_DOMAIN, SERVICE_SET_FAN_MODE)
+
+    accessory._set_chars({CHAR_ROTATION_SPEED: 50})
+    await hass.async_block_till_done()
+
+    assert not climate_fan_calls
+    assert fan_calls[-1].data[ATTR_ENTITY_ID] == FAN_ENTITY_ID
+    # Snapped to the fan's own 33.3%-wide steps rather than written raw.
+    assert fan_calls[-1].data[ATTR_PERCENTAGE] == pytest.approx(100 / 3 * 2, abs=0.1)
+
+
+async def test_fan_entity_override_zero_speed_turns_the_fan_off(
+    hass: HomeAssistant, hk_driver: object
+) -> None:
+    """A slider write to zero calls fan.turn_off, not set_percentage(0)."""
+    set_climate(hass, HVACMode.COOL, **{ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF]})
+    _set_fan(hass, 100)
+    accessory = _accessory(hass, hk_driver, {CONF_FAN_ENTITY_ID: FAN_ENTITY_ID})
+    turn_off_calls = async_mock_service(hass, FAN_DOMAIN, SERVICE_TURN_OFF)
+
+    accessory._set_chars({CHAR_ROTATION_SPEED: 0})
+    await hass.async_block_till_done()
+
+    assert turn_off_calls[-1].data[ATTR_ENTITY_ID] == FAN_ENTITY_ID
+
+
+async def test_fan_entity_override_ignores_climate_fan_mode_changes(
+    hass: HomeAssistant, hk_driver: object
+) -> None:
+    """Once a fan entity is linked, climate fan_mode updates no longer apply."""
+    set_climate(
+        hass,
+        HVACMode.COOL,
+        **{ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF], ATTR_FAN_MODE: "High"},
+    )
+    _set_fan(hass, 40)
+    accessory = _accessory(hass, hk_driver, {CONF_FAN_ENTITY_ID: FAN_ENTITY_ID})
+    assert accessory.char_speed.value == 40
+
+    set_climate(
+        hass,
+        HVACMode.COOL,
+        **{ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF], ATTR_FAN_MODE: "Low"},
+    )
+    accessory.async_update_state(hass.states.get(ENTITY_ID))
+    assert accessory.char_speed.value == 40
+
+    _set_fan(hass, 80)
+    accessory.async_update_state(hass.states.get(ENTITY_ID))
+    assert accessory.char_speed.value == 80
+
+
+async def test_fan_entity_state_change_updates_rotation_speed_live(
+    hass: HomeAssistant, hk_driver: object
+) -> None:
+    """The fan entity's own state changes refresh RotationSpeed on their own."""
+    set_climate(hass, HVACMode.COOL, **{ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF]})
+    _set_fan(hass, 33)
+    accessory = _accessory(hass, hk_driver, {CONF_FAN_ENTITY_ID: FAN_ENTITY_ID})
+    accessory.run()
+    await hass.async_block_till_done()
+
+    _set_fan(hass, 90)
+    await hass.async_block_till_done()
+
+    assert accessory.char_speed.value == 90
