@@ -126,6 +126,25 @@ def fan_mode_to_speed(ordered_fan_speeds: list[str], fan_mode: Any) -> int | Non
     return ordered_list_item_to_percentage(ordered_fan_speeds, fan_mode_lower)
 
 
+def normalize_fan_entity_map(value: Any) -> dict[str, str]:
+    """Return a climate-entity-id to fan-entity-id mapping, dropping junk.
+
+    Shared by the YAML schema and the config/options flow so both accept and
+    persist the same shape: a mapping whose values are `fan.` domain
+    entity ids. Anything else silently drops the entry rather than raising,
+    matching how include/exclude entity lists are sanitized in config_flow.
+    """
+    if not isinstance(value, dict):
+        return {}
+    return {
+        climate_entity_id: fan_entity_id
+        for climate_entity_id, fan_entity_id in value.items()
+        if isinstance(climate_entity_id, str)
+        and isinstance(fan_entity_id, str)
+        and fan_entity_id.startswith("fan.")
+    }
+
+
 def is_swing_on(swing_mode: Any) -> bool:
     """Return whether a standard swing mode maps to HomeKit on."""
     return isinstance(swing_mode, str) and swing_mode.lower() in PRE_DEFINED_SWING_MODES

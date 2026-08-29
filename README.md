@@ -89,7 +89,8 @@ No `configuration.yaml` changes are required.
 3. Select one or more `climate` entities in **Include entities**
 4. Optionally set **Exclude entities**
 5. Choose the **Fan slider mode** (see below)
-6. Save
+6. Optionally set **Fan entity overrides** for any entity whose fan lives on its own `fan` entity (see below)
+7. Save
 
 You can change these later from **Settings → Devices & Services → HomeKit HeaterCooler Bridge → Configure**.
 
@@ -105,6 +106,16 @@ HomeKit's HeaterCooler tile has a single linear fan slider, so this integration 
 If the entity has no fan modes matching the chosen mode, its own fan modes are used as-is. Fan modes outside the chosen mode stay available from the underlying `climate` entity.
 
 This setting applies on every core generation, because selected entities always use this integration's accessory.
+
+### Separate fan entity
+
+Some units expose their fan as its own `fan` entity rather than through the climate entity's `fan_modes` (for example a standalone ventilation unit paired with a Daikin, or a fan managed by a separate integration). **Fan entity overrides** maps a climate entity straight to a `fan` entity:
+
+```json
+{ "climate.living": "fan.living" }
+```
+
+For a mapped entity, RotationSpeed reads and writes that fan entity's own `percentage` directly, `fan.set_percentage` snapped to its `percentage_step`, or `fan.turn_off` at 0%, instead of going through `climate.set_fan_mode` and the climate entity's `fan_modes` strings. This bypasses **Fan slider mode** entirely for that entity: the two settings are mutually exclusive per climate entity, and the fan entity map wins wherever both are set. Everything else about the accessory (HVAC mode, thresholds, swing) still comes from the climate entity as usual.
 
 ### Switching an entity to core's native accessory
 
