@@ -10,6 +10,7 @@ from unittest.mock import patch
 import pytest
 
 from custom_components.homekit_heatercooler.const import (
+    CONF_FAN_ENTITY_ID,
     DATA_PATCH_STATE,
     DOMAIN,
     FAN_LANE_MANUAL,
@@ -225,6 +226,57 @@ async def test_patch_threads_configured_fan_lane(
             assert accessory.ordered_fan_speeds == ["low", "mid", "high"]
         finally:
             remove_patch(hass)
+
+
+async def test_patch_threads_configured_fan_entity(
+    hass: HomeAssistant, hk_driver: object
+) -> None:
+    """A mapped fan entity reaches the accessory's config, keyed by climate id."""
+    set_climate(hass, HVACMode.COOL, **{ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF]})
+    hass.states.async_set(
+        "climate.other",
+        HVACMode.COOL,
+        {
+            ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.FAN_MODE,
+            ATTR_FAN_MODES: ["Auto", "Low", "High"],
+            ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF],
+        },
+    )
+    apply_patch(
+        hass,
+        {ENTITY_ID, "climate.other"},
+        set(),
+        fan_entities={ENTITY_ID: "fan.living"},
+    )
+    try:
+        accessory = homekit_accessories.get_accessory(
+            hass, hk_driver, hass.states.get(ENTITY_ID), 2, {}
+        )
+        assert accessory.fan_entity_id == "fan.living"
+
+        # An unmapped included entity keeps deriving its fan from climate.
+        other = homekit_accessories.get_accessory(
+            hass, hk_driver, hass.states.get("climate.other"), 3, {}
+        )
+        assert other.fan_entity_id is None
+    finally:
+        remove_patch(hass)
+
+
+async def test_apply_patch_updates_fan_entities_on_existing_state(
+    hass: HomeAssistant, hk_driver: object
+) -> None:
+    """Re-applying the patch (e.g. an options update) refreshes the fan map."""
+    set_climate(hass, HVACMode.COOL, **{ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF]})
+    apply_patch(hass, {ENTITY_ID}, set())
+    try:
+        apply_patch(hass, {ENTITY_ID}, set(), fan_entities={ENTITY_ID: "fan.living"})
+        accessory = homekit_accessories.get_accessory(
+            hass, hk_driver, hass.states.get(ENTITY_ID), 2, {}
+        )
+        assert accessory.config[CONF_FAN_ENTITY_ID] == "fan.living"
+    finally:
+        remove_patch(hass)
 
 
 async def test_patch_uses_bundled_type_without_touching_core_registry(

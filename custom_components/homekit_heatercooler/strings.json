@@ -7,12 +7,14 @@
         "data": {
           "include_entities": "Include entities",
           "exclude_entities": "Exclude entities",
-          "fan_lane": "Fan slider mode"
+          "fan_lane": "Fan slider mode",
+          "fan_entities": "Fan entity overrides"
         },
         "data_description": {
           "include_entities": "Represented as a HeaterCooler in Apple Home.",
           "exclude_entities": "Kept on the default Thermostat, even if included above.",
-          "fan_lane": "Which fan modes the three-position HomeKit fan slider drives. Applies on every Home Assistant release."
+          "fan_lane": "Which fan modes the three-position HomeKit fan slider drives. Applies on every Home Assistant release.",
+          "fan_entities": "Map a climate entity to a fan entity, e.g. {\"climate.living\": \"fan.living\"}. The fan entity's own percentage drives RotationSpeed instead of the climate entity's fan modes, ignoring Fan slider mode for that entity."
         }
       }
     },
@@ -28,12 +30,14 @@
         "data": {
           "include_entities": "Include entities",
           "exclude_entities": "Exclude entities",
-          "fan_lane": "Fan slider mode"
+          "fan_lane": "Fan slider mode",
+          "fan_entities": "Fan entity overrides"
         },
         "data_description": {
           "include_entities": "Represented as a HeaterCooler in Apple Home.",
           "exclude_entities": "Kept on the default Thermostat, even if included above.",
-          "fan_lane": "Which fan modes the three-position HomeKit fan slider drives. Applies on every Home Assistant release."
+          "fan_lane": "Which fan modes the three-position HomeKit fan slider drives. Applies on every Home Assistant release.",
+          "fan_entities": "Map a climate entity to a fan entity, e.g. {\"climate.living\": \"fan.living\"}. The fan entity's own percentage drives RotationSpeed instead of the climate entity's fan modes, ignoring Fan slider mode for that entity."
         }
       }
     }
