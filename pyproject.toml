@@ -23,7 +23,7 @@ dev = [
 # these two groups are how the suite gets pinned to one core generation or the
 # other. They are mutually exclusive by construction.
 test-legacy = ["pytest-homeassistant-custom-component==0.13.348"]
-test-native = ["pytest-homeassistant-custom-component==0.13.358"]
+test-native = ["pytest-homeassistant-custom-component==0.13.359"]
 
 [tool.mypy]
 python_version = "3.14"
