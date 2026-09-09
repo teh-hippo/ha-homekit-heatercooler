@@ -101,7 +101,7 @@ source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohttp" },
     { name = "mashumaro" },
-    { name = "orjson", version = "3.12.0", source = { registry = "https://pypi.org/simple" } },
+    { name = "orjson", version = "3.11.9", source = { registry = "https://pypi.org/simple" } },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/55/76/24e578dcf937b27017befb2fc2402565810a7716cdd43abbb8cefc2f425c/aiohasupervisor-0.6.0.tar.gz", hash = "sha256:debee1dc3b99114f5b653959cb828a74a13181011cae3ac013ae9aefb0cda062", size = 47453, upload-time = "2026-07-20T15:15:23.821Z" }
 wheels = [
@@ -1163,7 +1163,7 @@ test-legacy = [
     { name = "pytest-homeassistant-custom-component", version = "0.13.348", source = { registry = "https://pypi.org/simple" } },
 ]
 test-native = [
-    { name = "pytest-homeassistant-custom-component", version = "0.13.363", source = { registry = "https://pypi.org/simple" } },
+    { name = "pytest-homeassistant-custom-component", version = "0.13.364", source = { registry = "https://pypi.org/simple" } },
 ]
 
 [package.metadata]
@@ -1182,7 +1182,7 @@ dev = [
     { name = "ruff", specifier = ">=0.13.0" },
 ]
 test-legacy = [{ name = "pytest-homeassistant-custom-component", specifier = "==0.13.348" }]
-test-native = [{ name = "pytest-homeassistant-custom-component", specifier = "==0.13.363" }]
+test-native = [{ name = "pytest-homeassistant-custom-component", specifier = "==0.13.364" }]
 
 [[package]]
 name = "habluetooth"
@@ -1229,8 +1229,8 @@ dependencies = [
     { name = "chacha20poly1305-reuseable" },
     { name = "cryptography" },
     { name = "h11" },
-    { name = "orjson", version = "3.11.9", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-23-ha-homekit-heatercooler-test-legacy'" },
-    { name = "orjson", version = "3.12.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-23-ha-homekit-heatercooler-test-native' or extra != 'group-23-ha-homekit-heatercooler-test-legacy'" },
+    { name = "orjson", version = "3.11.9", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-23-ha-homekit-heatercooler-test-legacy' or extra == 'group-23-ha-homekit-heatercooler-test-native'" },
+    { name = "orjson", version = "3.12.0", source = { registry = "https://pypi.org/simple" }, marker = "(extra == 'group-23-ha-homekit-heatercooler-test-legacy' and extra == 'group-23-ha-homekit-heatercooler-test-native') or (extra != 'group-23-ha-homekit-heatercooler-test-legacy' and extra != 'group-23-ha-homekit-heatercooler-test-native')" },
     { name = "zeroconf", version = "0.150.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-23-ha-homekit-heatercooler-test-legacy'" },
     { name = "zeroconf", version = "0.151.1", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-23-ha-homekit-heatercooler-test-native' or extra != 'group-23-ha-homekit-heatercooler-test-legacy'" },
 ]
@@ -1370,7 +1370,7 @@ wheels = [
 
 [[package]]
 name = "homeassistant"
-version = "2026.9.0"
+version = "2026.9.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiodns" },
@@ -1399,7 +1399,7 @@ dependencies = [
     { name = "ifaddr" },
     { name = "jinja2" },
     { name = "lru-dict" },
-    { name = "orjson", version = "3.12.0", source = { registry = "https://pypi.org/simple" } },
+    { name = "orjson", version = "3.11.9", source = { registry = "https://pypi.org/simple" } },
     { name = "packaging" },
     { name = "pillow" },
     { name = "probatio" },
@@ -1422,9 +1422,9 @@ dependencies = [
     { name = "yarl" },
     { name = "zeroconf", version = "0.151.1", source = { registry = "https://pypi.org/simple" } },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/da/ed/c6d0a0419265e3736b9696eb11a450b63b4ed5e01f1b6055ba67a6072094/homeassistant-2026.9.0.tar.gz", hash = "sha256:ac140c0d702b703ecb1e6c2a2cc7ab84ab070e8f74f75ec9db67fbdb9d87b6c2", size = 37518277, upload-time = "2026-09-02T16:23:23.606Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/4c/24/006178145e29fe3869271068b2511fec62d82d9f30b6ebcfbfd5ab6104ac/homeassistant-2026.9.1.tar.gz", hash = "sha256:cde0b3c16b95a15b8182d2f3eb874e73689f72e8bceeb6399d4295272408142b", size = 37548579, upload-time = "2026-09-05T13:08:00.534Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c4/62/50227df31ac0de669e118cdfe23e2a2d6207d39cce92ad044154547d74de/homeassistant-2026.9.0-py3-none-any.whl", hash = "sha256:072764fd37d2c01fc8b3c87865327be2f79497232d4f8783efab5ea82281cf3e", size = 61125351, upload-time = "2026-09-02T16:23:17.583Z" },
+    { url = "https://files.pythonhosted.org/packages/0d/22/fe4951a10f496bd8c23bd128f4a25da5f508485183285f33093ce68a1b25/homeassistant-2026.9.1-py3-none-any.whl", hash = "sha256:7f80a3bc2f6d7e570643e061066827e8375ef4e85306cc75b40b66a0e3901f4c", size = 61149532, upload-time = "2026-09-05T13:07:54.613Z" },
 ]
 
 [[package]]
@@ -2399,13 +2399,13 @@ wheels = [
 
 [[package]]
 name = "pytest-homeassistant-custom-component"
-version = "0.13.363"
+version = "0.13.364"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "aiohasupervisor", version = "0.6.0", source = { registry = "https://pypi.org/simple" } },
     { name = "coverage", version = "7.15.4", source = { registry = "https://pypi.org/simple" } },
     { name = "freezegun" },
-    { name = "homeassistant", version = "2026.9.0", source = { registry = "https://pypi.org/simple" } },
+    { name = "homeassistant", version = "2026.9.1", source = { registry = "https://pypi.org/simple" } },
     { name = "license-expression" },
     { name = "mock-open" },
     { name = "numpy" },
@@ -2432,9 +2432,9 @@ dependencies = [
     { name = "tqdm" },
     { name = "unidiff", version = "1.0.0", source = { registry = "https://pypi.org/simple" } },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/85/98/e60618f170a96650e1c6bcb78a2525b356f0067c2434972110b29bcf985e/pytest_homeassistant_custom_component-0.13.363.tar.gz", hash = "sha256:e14868eab5258b341493460317f7473ac4cb20d847e24cf3e78b8c4b7a5614fd", size = 78536, upload-time = "2026-09-03T09:21:58.346Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/94/57/4a030891a51ee9b67c04aeb642fcc4f6a0aabc8f0ea9520c9bedaf552251/pytest_homeassistant_custom_component-0.13.364.tar.gz", hash = "sha256:28d7de7c94b380a5668654efdb498e1dab4242bf23498bb23456f19a2e965fca", size = 78496, upload-time = "2026-09-06T09:07:10.562Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/4f/1f/4a8d7796d3d9cd6a81ae2c155f8358f70800115e3695e1f85f2b441b933b/pytest_homeassistant_custom_component-0.13.363-py3-none-any.whl", hash = "sha256:5437a1371bb1643973f4e0ebe8aa573b45fc589ec402a82f744d9bd9fb47e88f", size = 84452, upload-time = "2026-09-03T09:21:57.081Z" },
+    { url = "https://files.pythonhosted.org/packages/35/3b/78be2438f25c117d1b3dbd9f598f7b5a4f63c965990e72dea73a6d04385b/pytest_homeassistant_custom_component-0.13.364-py3-none-any.whl", hash = "sha256:47b0a3545b32521e151ad5cf4a9a11033395f0f13215854006bec1070fd18e1d", size = 84452, upload-time = "2026-09-06T09:07:09.597Z" },
 ]
 
 [[package]]
@@ -3071,8 +3071,7 @@ version = "0.3.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "mashumaro" },
-    { name = "orjson", version = "3.11.9", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-23-ha-homekit-heatercooler-test-legacy'" },
-    { name = "orjson", version = "3.12.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-23-ha-homekit-heatercooler-test-native'" },
+    { name = "orjson", version = "3.11.9", source = { registry = "https://pypi.org/simple" } },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/80/e8/050ffe3b71ff44d3885eee2bed763ca937e2a30bc950d866f22ba657776b/webrtc_models-0.3.0.tar.gz", hash = "sha256:559c743e5cc3bcc8133be1b6fb5e8492a9ddb17151129c21cbb2e3f2a1166526", size = 9411, upload-time = "2024-11-18T17:43:45.682Z" }
 wheels = [
