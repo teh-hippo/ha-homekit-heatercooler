@@ -14,6 +14,7 @@ from custom_components.homekit_heatercooler.climate_util import (
     get_swing_on_mode,
     get_temperature_range_from_state,
     has_swing_off_mode,
+    normalize_fan_entity_map,
     resolve_target_temp_range,
 )
 from custom_components.homekit_heatercooler.const import FAN_LANE_AUTO, FAN_LANE_MANUAL
@@ -26,6 +27,22 @@ from homeassistant.components.climate import (
 from homeassistant.core import State
 
 SEVEN_FAN_MODES = ["Auto", "Low", "Mid", "High", "Low/Auto", "Mid/Auto", "High/Auto"]
+
+
+def test_normalize_fan_entity_map_keeps_only_fan_domain_values() -> None:
+    assert normalize_fan_entity_map(
+        {
+            "climate.living": "fan.living",
+            "climate.bad_value": "climate.not_a_fan",
+            123: "fan.numeric_key",
+            "climate.bad_type": 123,
+        }
+    ) == {"climate.living": "fan.living"}
+
+
+def test_normalize_fan_entity_map_rejects_non_dict() -> None:
+    assert normalize_fan_entity_map(["climate.a", "fan.a"]) == {}
+    assert normalize_fan_entity_map(None) == {}
 
 
 def test_hap_numeric_coercion_rejects_non_finite_values() -> None:

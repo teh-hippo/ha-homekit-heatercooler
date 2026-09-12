@@ -20,6 +20,7 @@ from homeassistant.core import HomeAssistant, State
 
 from .climate_util import as_float
 from .const import (
+    CONF_FAN_ENTITY_ID,
     CONF_FAN_LANE,
     DATA_PATCH_STATE,
     DEFAULT_FAN_LANE,
@@ -44,6 +45,7 @@ class PatchState:
     include_entities: set[str]
     exclude_entities: set[str]
     fan_lane: str
+    fan_entities: dict[str, str]
     original_get_accessory: GetAccessory
     original_homekit_get_accessory: GetAccessory
 
@@ -109,6 +111,7 @@ def apply_patch(
     include_entities: set[str],
     exclude_entities: set[str],
     fan_lane: str = DEFAULT_FAN_LANE,
+    fan_entities: Mapping[str, str] | None = None,
 ) -> None:
     """Patch HomeKit get_accessory to expose selected climates as HeaterCooler."""
     domain_data = hass.data.setdefault(DOMAIN, {})
@@ -117,6 +120,7 @@ def apply_patch(
         patch_state.include_entities = include_entities
         patch_state.exclude_entities = exclude_entities
         patch_state.fan_lane = fan_lane
+        patch_state.fan_entities = dict(fan_entities or {})
         return
 
     original_get_accessory = homekit_accessories.get_accessory
@@ -133,6 +137,7 @@ def apply_patch(
         include_entities=include_entities,
         exclude_entities=exclude_entities,
         fan_lane=fan_lane,
+        fan_entities=dict(fan_entities or {}),
         original_get_accessory=original_get_accessory,
         original_homekit_get_accessory=original_homekit_get_accessory,
     )
@@ -158,6 +163,8 @@ def apply_patch(
             ):
                 name = config.get(CONF_NAME, state.name)
                 hc_config = {**config, CONF_FAN_LANE: patch_state.fan_lane}
+                if fan_entity_id := patch_state.fan_entities.get(state.entity_id):
+                    hc_config[CONF_FAN_ENTITY_ID] = fan_entity_id
                 return _bundled_heatercooler()(
                     hass, driver, name, state.entity_id, aid, hc_config
                 )

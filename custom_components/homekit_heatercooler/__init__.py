@@ -20,12 +20,15 @@ from homeassistant.helpers.entityfilter import (
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.util import dt as dt_util
 
+from .climate_util import normalize_fan_entity_map
 from .const import (
+    CONF_FAN_ENTITIES,
     CONF_FAN_LANE,
     DATA_PATCH_STATE,
     DATA_PATCH_STATUS,
     DATA_PATCH_STATUS_UNSUB,
     DATA_YAML_EXCLUDE_ENTITIES,
+    DATA_YAML_FAN_ENTITIES,
     DATA_YAML_FAN_LANE,
     DATA_YAML_INCLUDE_ENTITIES,
     DEFAULT_FAN_LANE,
@@ -57,6 +60,9 @@ CONFIG_SCHEMA = vol.Schema(
                 vol.Optional(CONF_FAN_LANE, default=DEFAULT_FAN_LANE): vol.In(
                     [FAN_LANE_AUTO, FAN_LANE_MANUAL]
                 ),
+                vol.Optional(CONF_FAN_ENTITIES, default={}): vol.Schema(
+                    {cv.entity_id: cv.entity_id}
+                ),
             }
         )
     },
@@ -71,6 +77,7 @@ async def async_setup(hass: HomeAssistant, config: Mapping[str, Any]) -> bool:
     domain_data[DATA_YAML_INCLUDE_ENTITIES] = include_entities
     domain_data[DATA_YAML_EXCLUDE_ENTITIES] = exclude_entities
     domain_data[DATA_YAML_FAN_LANE] = _yaml_fan_lane_from_config(config)
+    domain_data[DATA_YAML_FAN_ENTITIES] = _yaml_fan_entities_from_config(config)
     _refresh_patch(hass)
     return True
 
@@ -119,12 +126,26 @@ def _valid_fan_lane(value: Any) -> str:
     return value if value in (FAN_LANE_AUTO, FAN_LANE_MANUAL) else DEFAULT_FAN_LANE
 
 
+def _yaml_fan_entities_from_config(config: Mapping[str, Any]) -> dict[str, str]:
+    """Extract the climate-to-fan entity map from YAML config."""
+    integration_config = config.get(DOMAIN)
+    if isinstance(integration_config, Mapping):
+        return normalize_fan_entity_map(integration_config.get(CONF_FAN_ENTITIES))
+    return {}
+
+
 def _entry_entities(entry: ConfigEntry) -> tuple[set[str], set[str]]:
     """Extract include/exclude entity IDs from a config entry."""
     source = entry.options or entry.data
     include_entities = _entity_set(source.get(CONF_INCLUDE_ENTITIES))
     exclude_entities = _entity_set(source.get(CONF_EXCLUDE_ENTITIES))
     return include_entities, exclude_entities
+
+
+def _entry_fan_entities(entry: ConfigEntry) -> dict[str, str]:
+    """Extract the climate-to-fan entity map from a config entry."""
+    source = entry.options or entry.data
+    return normalize_fan_entity_map(source.get(CONF_FAN_ENTITIES))
 
 
 def _entity_set(value: Any) -> set[str]:
@@ -156,6 +177,7 @@ def _refresh_patch(
             include_entities,
             exclude_entities,
             _combined_fan_lane(hass, ignore_entry),
+            _combined_fan_entities(hass, ignore_entry),
         )
     else:
         remove_patch(hass)
@@ -202,6 +224,25 @@ def _combined_fan_lane(
         if CONF_FAN_LANE in source:
             fan_lane = _valid_fan_lane(source.get(CONF_FAN_LANE))
     return fan_lane
+
+
+def _combined_fan_entities(
+    hass: HomeAssistant, ignore_entry: ConfigEntry | None = None
+) -> dict[str, str]:
+    """Resolve the climate-to-fan entity map from YAML and config entries.
+
+    Unlike the single bridge-wide fan lane, this is a per-climate-entity
+    mapping, so entries merge rather than override: a later source only
+    replaces the keys it defines.
+    """
+    fan_entities = dict(
+        normalize_fan_entity_map(_domain_data(hass).get(DATA_YAML_FAN_ENTITIES))
+    )
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if ignore_entry is not None and entry.entry_id == ignore_entry.entry_id:
+            continue
+        fan_entities.update(_entry_fan_entities(entry))
+    return fan_entities
 
 
 def _register_patch_status_refresh(

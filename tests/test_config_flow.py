@@ -6,6 +6,7 @@ from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.homekit_heatercooler.config_flow import _normalize_input
 from custom_components.homekit_heatercooler.const import (
+    CONF_FAN_ENTITIES,
     CONF_FAN_LANE,
     DEFAULT_FAN_LANE,
     DOMAIN,
@@ -34,6 +35,7 @@ async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
             CONF_INCLUDE_ENTITIES: ["climate.living", "climate.bedroom"],
             CONF_EXCLUDE_ENTITIES: [],
             CONF_FAN_LANE: FAN_LANE_MANUAL,
+            CONF_FAN_ENTITIES: {"climate.living": "fan.living"},
         },
     )
     await hass.async_block_till_done()
@@ -44,6 +46,7 @@ async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
         "climate.living",
     ]
     assert result["data"][CONF_FAN_LANE] == FAN_LANE_MANUAL
+    assert result["data"][CONF_FAN_ENTITIES] == {"climate.living": "fan.living"}
 
 
 async def test_options_flow_round_trip(hass: HomeAssistant) -> None:
@@ -88,6 +91,21 @@ def test_normalize_input_sorts_dedupes_and_filters() -> None:
     assert normalized[CONF_INCLUDE_ENTITIES] == ["climate.a", "climate.b"]
     assert normalized[CONF_EXCLUDE_ENTITIES] == ["climate.z"]
     assert normalized[CONF_FAN_LANE] == FAN_LANE_MANUAL
+    assert normalized[CONF_FAN_ENTITIES] == {}
+
+
+def test_normalize_input_keeps_only_valid_fan_entity_map_entries() -> None:
+    """Fan entity overrides are sanitized the same way as the other fields."""
+    normalized = _normalize_input(
+        {
+            CONF_INCLUDE_ENTITIES: [],
+            CONF_FAN_ENTITIES: {
+                "climate.living": "fan.living",
+                "climate.bad": "climate.not_a_fan",
+            },
+        }
+    )
+    assert normalized[CONF_FAN_ENTITIES] == {"climate.living": "fan.living"}
 
 
 def test_normalize_input_invalid_fan_lane_falls_back() -> None:
