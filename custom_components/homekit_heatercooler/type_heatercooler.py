@@ -26,6 +26,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
+from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
 from homeassistant.core import State, callback
 from homeassistant.util.enum import try_parse_enum
@@ -84,10 +85,18 @@ RANGE_MODES = (HVACMode.HEAT_COOL, HVACMode.AUTO)
 
 
 class ClimateServiceCall(NamedTuple):
-    """A queued climate write and its accepted mode state."""
+    """A queued service write and its accepted mode state.
+
+    Despite the name, a write can target any domain: a linked fan entity's
+    RotationSpeed write goes to the `fan` domain and its own entity_id
+    instead of the climate entity, everything else keeps the climate
+    domain default.
+    """
 
     service: str
     data: dict[str, Any]
+    domain: str = CLIMATE_DOMAIN
+    entity_id: str | None = None
     commit_mode: HVACMode | None = None
     pending_mode: HVACMode | None = None
 
@@ -176,7 +185,7 @@ class HeaterCooler(HomeKitClimateAccessory):
 
         # Intentional legacy delta: fan_lane keeps RotationSpeed on the primary
         # service, instead of core's linked Fanv2 auto-control service.
-        if self.ordered_fan_speeds:
+        if self.ordered_fan_speeds or self.fan_entity_id:
             chars.append(CHAR_ROTATION_SPEED)
         if self.swing_on_mode is not None:
             chars.append(CHAR_SWING_MODE)
@@ -223,11 +232,16 @@ class HeaterCooler(HomeKitClimateAccessory):
                 )
 
         self.char_speed = None
-        if self.ordered_fan_speeds:
+        if self.ordered_fan_speeds or self.fan_entity_id:
+            min_step = (
+                self._fan_percentage_step
+                if self.fan_entity_id
+                else 100 / len(self.ordered_fan_speeds)
+            )
             self.char_speed = service.configure_char(
                 CHAR_ROTATION_SPEED,
                 value=100,
-                properties={PROP_MIN_STEP: 100 / len(self.ordered_fan_speeds)},
+                properties={PROP_MIN_STEP: min_step},
             )
         self.char_swing = None
         if self.swing_on_mode is not None:
@@ -297,9 +311,9 @@ class HeaterCooler(HomeKitClimateAccessory):
             reported_mode = self._last_reported_mode
             known_mode = self._last_known_mode
             if not await self.async_call_service_and_wait(
-                CLIMATE_DOMAIN,
+                call.domain,
                 call.service,
-                {ATTR_ENTITY_ID: self.entity_id, **call.data},
+                {ATTR_ENTITY_ID: call.entity_id or self.entity_id, **call.data},
             ):
                 return
             if call.pending_mode and self._last_reported_mode == reported_mode:
@@ -313,12 +327,26 @@ class HeaterCooler(HomeKitClimateAccessory):
         service_calls: list[ClimateServiceCall],
     ) -> None:
         """Queue fan and swing writes after HVAC and temperature writes."""
-        if (
-            CHAR_ROTATION_SPEED in char_values
-            and (params := self._fan_speed_params(char_values[CHAR_ROTATION_SPEED]))
-            is not None
-        ):
-            service_calls.append(ClimateServiceCall(SERVICE_SET_FAN_MODE, params))
+        if CHAR_ROTATION_SPEED in char_values:
+            if self.fan_entity_id is not None:
+                if (
+                    call := self._fan_entity_speed_params(
+                        char_values[CHAR_ROTATION_SPEED]
+                    )
+                ) is not None:
+                    service, data = call
+                    service_calls.append(
+                        ClimateServiceCall(
+                            service,
+                            data,
+                            domain=FAN_DOMAIN,
+                            entity_id=self.fan_entity_id,
+                        )
+                    )
+            elif (
+                params := self._fan_speed_params(char_values[CHAR_ROTATION_SPEED])
+            ) is not None:
+                service_calls.append(ClimateServiceCall(SERVICE_SET_FAN_MODE, params))
         if (
             CHAR_SWING_MODE in char_values
             and (params := self._swing_mode_params(char_values[CHAR_SWING_MODE]))
