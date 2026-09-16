@@ -5,6 +5,7 @@ from __future__ import annotations
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from custom_components.homekit_heatercooler.const import (
+    CONF_FAN_ENTITIES,
     DATA_PATCH_STATE,
     DATA_PATCH_STATUS,
     DOMAIN,
@@ -65,3 +66,33 @@ async def test_setup_survives_malformed_target_entity(hass: HomeAssistant) -> No
     status = hass.data[DOMAIN][DATA_PATCH_STATUS]
     assert "climate.broken" in status["unsupported_entities"]
     assert "climate.broken" not in status["patched_entities"]
+
+
+async def test_fan_override_counts_as_patched_in_diagnostics(
+    hass: HomeAssistant,
+) -> None:
+    """Status uses the same resolved fan override as accessory routing."""
+    hass.states.async_set(
+        ENTITY_ID,
+        HVACMode.COOL,
+        {
+            ATTR_SUPPORTED_FEATURES: 0,
+            ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF],
+        },
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_INCLUDE_ENTITIES: [ENTITY_ID],
+            CONF_FAN_ENTITIES: {ENTITY_ID: "fan.living"},
+        },
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    status = hass.data[DOMAIN][DATA_PATCH_STATUS]
+    assert status["patch_active"] is True
+    assert status["patched_entities"] == [ENTITY_ID]
+    assert status["patched_entities_count"] == 1
+    assert status["unsupported_entities"] == []
