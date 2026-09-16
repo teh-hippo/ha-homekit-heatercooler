@@ -104,6 +104,13 @@ def test_supports_heatercooler_with_swing_modes() -> None:
     assert supports_heatercooler(state) is True
 
 
+def test_supports_heatercooler_with_a_fan_override_and_no_climate_modes() -> None:
+    """A fan override supplies RotationSpeed on its own, so it qualifies alone."""
+    state = _state(**{ATTR_SUPPORTED_FEATURES: 0})
+    assert supports_heatercooler(state) is False
+    assert supports_heatercooler(state, "fan.living") is True
+
+
 def test_supports_heatercooler_feature_without_modes() -> None:
     state = _state(**{ATTR_SUPPORTED_FEATURES: ClimateEntityFeature.FAN_MODE})
     assert supports_heatercooler(state) is False
@@ -259,6 +266,41 @@ async def test_patch_threads_configured_fan_entity(
             hass, hk_driver, hass.states.get("climate.other"), 3, {}
         )
         assert other.fan_entity_id is None
+    finally:
+        remove_patch(hass)
+
+
+async def test_fan_override_routes_a_climate_without_fan_modes_to_heatercooler(
+    hass: HomeAssistant, hk_driver: object
+) -> None:
+    """The override's own use case: a climate with no fan or swing modes at all."""
+    set_climate(
+        hass,
+        HVACMode.COOL,
+        **{
+            ATTR_SUPPORTED_FEATURES: 0,
+            ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF],
+            ATTR_FAN_MODES: None,
+            ATTR_SWING_MODES: None,
+        },
+    )
+    hass.states.async_set("fan.living", "on", {"percentage": 50})
+
+    apply_patch(hass, {ENTITY_ID}, set())
+    try:
+        # Without the override it stays a plain Thermostat.
+        plain = homekit_accessories.get_accessory(
+            hass, hk_driver, hass.states.get(ENTITY_ID), 2, {}
+        )
+        assert type(plain).__name__ == "Thermostat"
+
+        apply_patch(hass, {ENTITY_ID}, set(), fan_entities={ENTITY_ID: "fan.living"})
+        accessory = homekit_accessories.get_accessory(
+            hass, hk_driver, hass.states.get(ENTITY_ID), 3, {}
+        )
+        assert type(accessory).__name__ == "HeaterCooler"
+        assert accessory.fan_entity_id == "fan.living"
+        assert accessory.char_speed is not None
     finally:
         remove_patch(hass)
 

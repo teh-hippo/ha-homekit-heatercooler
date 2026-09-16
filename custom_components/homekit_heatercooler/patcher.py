@@ -50,8 +50,16 @@ class PatchState:
     original_homekit_get_accessory: GetAccessory
 
 
-def supports_heatercooler(state: State) -> bool:
-    """Return True if a climate entity has capabilities suited to HeaterCooler."""
+def supports_heatercooler(state: State, fan_entity_id: str | None = None) -> bool:
+    """Return True if a climate entity has capabilities suited to HeaterCooler.
+
+    A per-entity fan override is itself a qualifying capability: it supplies
+    RotationSpeed from a separate `fan.` entity, which is the whole point of
+    the override. Requiring climate fan_modes on top of it would keep exactly
+    the entities the override exists for on the plain Thermostat accessory.
+    """
+    if fan_entity_id:
+        return True
     features_value = as_float(state.attributes.get(ATTR_SUPPORTED_FEATURES, 0))
     features = int(features_value) if features_value is not None else 0
     supports_fan_or_swing = bool(
@@ -151,6 +159,9 @@ def apply_patch(
     ) -> homekit_accessories.HomeAccessory | None:
         config = config or {}
         try:
+            # Resolved before the capability check, so an entity that only
+            # qualifies through its fan override is not filtered out first.
+            fan_entity_id = patch_state.fan_entities.get(state.entity_id)
             if (
                 state.domain == "climate"
                 and aid
@@ -159,11 +170,11 @@ def apply_patch(
                     patch_state.include_entities,
                     patch_state.exclude_entities,
                 )
-                and supports_heatercooler(state)
+                and supports_heatercooler(state, fan_entity_id)
             ):
                 name = config.get(CONF_NAME, state.name)
                 hc_config = {**config, CONF_FAN_LANE: patch_state.fan_lane}
-                if fan_entity_id := patch_state.fan_entities.get(state.entity_id):
+                if fan_entity_id:
                     hc_config[CONF_FAN_ENTITY_ID] = fan_entity_id
                 return _bundled_heatercooler()(
                     hass, driver, name, state.entity_id, aid, hc_config
