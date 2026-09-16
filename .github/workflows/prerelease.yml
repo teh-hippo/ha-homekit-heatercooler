@@ -1,0 +1,54 @@
+name: Prerelease
+
+on:
+  push:
+    tags: ['v*-rc.*']
+
+concurrency:
+  group: prerelease-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  prerelease:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+
+      - uses: astral-sh/setup-uv@bec219d24cd3e171d82865faccec33120bb574f4 # v10.1.0
+
+      - name: Verify tag and installed version
+        env:
+          RC_TAG: ${{ github.ref_name }}
+        run: |
+          python3 - <<'PY'
+          import json
+          import os
+          import re
+          from pathlib import Path
+
+          match = re.fullmatch(r"v(\d+\.\d+\.\d+)-rc\.([1-9]\d*)\.[a-z0-9][a-z0-9.-]*", os.environ["RC_TAG"])
+          assert match, "Expected vMAJOR.MINOR.PATCH-rc.N.SUFFIX"
+          manifest = json.loads(Path("custom_components/homekit_heatercooler/manifest.json").read_text())
+          assert manifest["version"] == f"{match[1]}rc{match[2]}", "Stamp the RC manifest before tagging"
+          PY
+
+      - name: Check both Home Assistant generations
+        run: bash scripts/check.sh
+
+      - name: Package exact tagged source
+        run: git archive --format=zip --output="$RUNNER_TEMP/homekit_heatercooler.zip" "$GITHUB_SHA:custom_components/homekit_heatercooler"
+
+      - name: Publish immutable candidate
+        working-directory: ${{ runner.temp }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RC_TAG: ${{ github.ref_name }}
+        run: |
+          sha256sum homekit_heatercooler.zip > homekit_heatercooler.zip.sha256
+          sha256sum --check homekit_heatercooler.zip.sha256
+          gh release create "$RC_TAG" homekit_heatercooler.zip homekit_heatercooler.zip.sha256 \
+            --verify-tag --prerelease --latest=false --title "$RC_TAG" \
+            --notes "Release candidate from commit $GITHUB_SHA. Both Home Assistant test lanes passed. Select this exact prerelease in HACS, then restart Home Assistant. This repository uses HACS source-tag installation; the attached ZIP contains the same integration files for manual installation."
