@@ -1,6 +1,99 @@
 # CHANGELOG
 
 
+## v1.7.0 (2026-09-16)
+
+### Bug Fixes
+
+- Account for fan overrides in patch diagnostics
+  ([`cfab456`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/cfab456d816ec97a68cd9a459d1c1d31b9e3df44))
+
+- Avoid invalid placeholders in fan override descriptions
+  ([`eabd20f`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/eabd20fca04cf1e2e240f2e4568950e5c02f50bc))
+
+- Make the fan override qualify for HeaterCooler and report fan state truthfully
+  ([`b8cd829`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/b8cd8290455481080e9c0c608c5121f8e4cde620))
+
+### Chores
+
+- **deps**: Lock file maintenance
+  ([`4616060`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/461606042c518a37818c61da3d88de34ca9d2dbb))
+
+- **deps**: Lock file maintenance
+  ([`d291832`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/d2918320f347155fb8a14f03d98f0771a5a7d58a))
+
+- **deps**: Lock file maintenance
+  ([`bd37e6f`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/bd37e6f327f55b562b2e4fc8a687e245710820f2))
+
+- **deps**: Lock file maintenance
+  ([`e405098`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/e405098ff4d5b68ae7552017ccd3a73b55427f9e))
+
+- **deps**: Lock file maintenance
+  ([`d4dd4b8`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/d4dd4b8e59a8586255124b3de0ba04d2311953db))
+
+- **deps**: Lock file maintenance
+  ([`af20561`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/af205612dfdcc005d84148be836243b134c62566))
+
+- **deps**: Lock file maintenance
+  ([`95abd77`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/95abd7772262e5716309bdfa391e685d1114f3c1))
+
+- **deps**: Lock file maintenance
+  ([`f822026`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/f822026fa9e109b86cc6cc10c3e19724608bb5db))
+
+- **deps**: Lock file maintenance
+  ([`964130f`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/964130f59932dd5d4e2a8f6e9cc7e0844580ac10))
+
+- **deps**: Lock file maintenance
+  ([`07ea2d8`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/07ea2d8b374ebc7c57b8acba30949decba4878c1))
+
+- **deps**: Lock file maintenance
+  ([`00f6349`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/00f6349d15ef02bb01aab814df71b981ffa03227))
+
+- **deps**: Lock file maintenance
+  ([`fd7fedc`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/fd7fedc8b91ed16261e32969da8c9fe97b8901e3))
+
+- **deps**: Update astral-sh/setup-uv action to v10.1.0
+  ([`0801f43`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/0801f430f01522c97ff97a8862c92f5157b823b3))
+
+- **deps**: Update dependency pytest-homeassistant-custom-component to v0.13.357
+  ([`51713f7`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/51713f7ef36e2bc2a4c2de9a5eccd9afa2d9e5fd))
+
+- **deps**: Update dependency pytest-homeassistant-custom-component to v0.13.358
+  ([`f2bd171`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/f2bd17186f0d8fd14699bdccd3be31fc00337fbf))
+
+- **deps**: Update dependency pytest-homeassistant-custom-component to v0.13.359
+  ([`433bfd7`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/433bfd73fd2f50a50be8bcd92b20d69400bd5dc2))
+
+- **deps**: Update dependency pytest-homeassistant-custom-component to v0.13.360
+  ([`0d8f7a6`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/0d8f7a669827735bf0eec926f5fb9a9f34c20310))
+
+- **deps**: Update dependency pytest-homeassistant-custom-component to v0.13.361
+  ([`d606315`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/d6063155bd2153a8efd55a49175ba7cf1f06ad23))
+
+- **deps**: Update dependency pytest-homeassistant-custom-component to v0.13.362
+  ([`c66a11b`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/c66a11be994e931cc7ac904e1af4bc2bc4806638))
+
+- **deps**: Update dependency pytest-homeassistant-custom-component to v0.13.363
+  ([`63b3df7`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/63b3df737a2fe270882e2492dc8257217f7fc96d))
+
+- **deps**: Update dependency pytest-homeassistant-custom-component to v0.13.364
+  ([`aaf5f43`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/aaf5f43bb57ab91f00ae3e23d89e68ae55c35472))
+
+- **deps**: Update dependency pytest-homeassistant-custom-component to v0.13.365
+  ([`2092707`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/2092707ae4452c80f4f5374dff404c428750f02b))
+
+- **deps**: Update python-semantic-release/python-semantic-release digest to 9a026e9
+  ([`54a41e4`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/54a41e4bb6657b06b66b94a87f92101a813b7e20))
+
+- **deps**: Update softprops/action-gh-release digest to efb3536
+  ([`2b32693`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/2b326937c5d4be5347c8a9c727e5afce096f326f))
+
+### Features
+
+- Ship per-entity fan overrides with RC validation
+  ([`3202c1e`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/3202c1ee76f51a025d9811bc19eccaa1c55f1bb8))
+
+
 ## v1.6.5 (2026-08-24)
 
 ### Bug Fixes
