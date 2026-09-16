@@ -308,6 +308,8 @@ def _build_patch_status(
     exclude_entities: set[str],
 ) -> dict[str, Any]:
     """Collect patch status details for diagnostic entities."""
+    patch_state = _domain_data(hass).get(DATA_PATCH_STATE)
+    fan_entities = patch_state.fan_entities if patch_state else {}
     target_entities = sorted(include_entities - exclude_entities)
     patched_entities: list[str] = []
     missing_entities: list[str] = []
@@ -322,12 +324,12 @@ def _build_patch_status(
         if state.domain != "climate":
             non_climate_entities.append(entity_id)
             continue
-        if supports_heatercooler(state):
+        if supports_heatercooler(state, fan_entities.get(entity_id)):
             patched_entities.append(entity_id)
             continue
         unsupported_entities.append(entity_id)
 
-    hook_installed = bool(_domain_data(hass).get(DATA_PATCH_STATE))
+    hook_installed = bool(patch_state)
 
     return {
         "patch_active": hook_installed and bool(patched_entities),
