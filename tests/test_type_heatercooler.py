@@ -722,7 +722,10 @@ async def test_fan_entity_override_exposes_rotation_speed_without_climate_fan_mo
     assert accessory.ordered_fan_speeds == []
     assert accessory.char_speed is not None
     assert accessory.char_speed.value == 66
-    assert accessory.char_speed.properties["minStep"] == pytest.approx(100 / 3)
+    # HomeKit's default 1% step is kept: publishing the fan's own step would
+    # make pyhap round every reported percentage onto that grid. Writes are
+    # snapped to the fan's step instead.
+    assert accessory.char_speed.properties["minStep"] == 1
 
 
 async def test_fan_entity_override_writes_target_domain_and_percentage(
@@ -799,3 +802,40 @@ async def test_fan_entity_state_change_updates_rotation_speed_live(
     await hass.async_block_till_done()
 
     assert accessory.char_speed.value == 90
+
+
+async def test_fan_entity_write_follows_a_percentage_step_that_changed_later(
+    hass: HomeAssistant, hk_driver: object
+) -> None:
+    """Writes snap to the fan's current step, not the one seen at startup."""
+    set_climate(hass, HVACMode.COOL, **{ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF]})
+    _set_fan(hass, 0)
+    accessory = _accessory(hass, hk_driver, {CONF_FAN_ENTITY_ID: FAN_ENTITY_ID})
+    assert accessory.fan_percentage_step == pytest.approx(100 / 3)
+
+    # The fan swaps to a four-speed list after the accessory was built.
+    _set_fan(hass, 25, **{ATTR_PERCENTAGE_STEP: 25})
+    await hass.async_block_till_done()
+    assert accessory.fan_percentage_step == pytest.approx(25)
+
+    fan_calls = async_mock_service(hass, FAN_DOMAIN, SERVICE_SET_PERCENTAGE)
+    accessory._set_chars({CHAR_ROTATION_SPEED: 60})
+    await hass.async_block_till_done()
+
+    assert fan_calls[-1].data[ATTR_PERCENTAGE] == pytest.approx(50)
+
+
+async def test_fan_entity_write_falls_back_to_one_percent_without_a_step(
+    hass: HomeAssistant, hk_driver: object
+) -> None:
+    """A fan that reports no percentage_step yet is written to verbatim."""
+    set_climate(hass, HVACMode.COOL, **{ATTR_HVAC_MODES: [HVACMode.COOL, HVACMode.OFF]})
+    hass.states.async_set(FAN_ENTITY_ID, "on", {ATTR_PERCENTAGE: 10})
+    accessory = _accessory(hass, hk_driver, {CONF_FAN_ENTITY_ID: FAN_ENTITY_ID})
+    assert accessory.fan_percentage_step == 1.0
+
+    fan_calls = async_mock_service(hass, FAN_DOMAIN, SERVICE_SET_PERCENTAGE)
+    accessory._set_chars({CHAR_ROTATION_SPEED: 37})
+    await hass.async_block_till_done()
+
+    assert fan_calls[-1].data[ATTR_PERCENTAGE] == pytest.approx(37)

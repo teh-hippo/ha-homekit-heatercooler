@@ -233,15 +233,23 @@ class HeaterCooler(HomeKitClimateAccessory):
 
         self.char_speed = None
         if self.ordered_fan_speeds or self.fan_entity_id:
-            min_step = (
-                self._fan_percentage_step
+            # A linked fan entity keeps HomeKit's default 1% step. Publishing
+            # the fan's own percentage_step as minStep makes pyhap round every
+            # reported percentage onto that grid, so a fan sitting at 90% would
+            # surface as 100%. The step is also part of the accessory
+            # description HomeKit caches at pairing time, and a fan is free to
+            # change it at runtime. Writes are snapped to the live step in
+            # `_fan_entity_speed_params` instead, where a stale value cannot
+            # misreport state.
+            speed_properties: dict[str, Any] | None = (
+                None
                 if self.fan_entity_id
-                else 100 / len(self.ordered_fan_speeds)
+                else {PROP_MIN_STEP: 100 / len(self.ordered_fan_speeds)}
             )
             self.char_speed = service.configure_char(
                 CHAR_ROTATION_SPEED,
                 value=100,
-                properties={PROP_MIN_STEP: min_step},
+                properties=speed_properties,
             )
         self.char_swing = None
         if self.swing_on_mode is not None:

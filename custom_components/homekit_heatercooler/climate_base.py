@@ -100,20 +100,14 @@ class HomeKitClimateAccessory(HomeAccessory):
         self.fan_modes: dict[str, str] = {}
         self.ordered_fan_speeds: list[str] = []
         self.fan_entity_id: str | None = None
-        self._fan_percentage_step: float = 1.0
         configured_fan_entity_id = self.config.get(CONF_FAN_ENTITY_ID)
-        if (
-            isinstance(configured_fan_entity_id, str)
-            and configured_fan_entity_id.startswith("fan.")
-        ):
+        if isinstance(
+            configured_fan_entity_id, str
+        ) and configured_fan_entity_id.startswith("fan."):
             # A linked fan entity replaces climate fan_modes entirely: the
             # slider tracks that entity's own percentage, not a guess mapped
             # from the climate entity's fan_modes strings.
             self.fan_entity_id = configured_fan_entity_id
-            if (fan_state := self.hass.states.get(self.fan_entity_id)) is not None:
-                self._fan_percentage_step = (
-                    as_float(fan_state.attributes.get(ATTR_PERCENTAGE_STEP)) or 1.0
-                )
         elif features & ClimateEntityFeature.FAN_MODE:
             fan_lane = self.config.get(CONF_FAN_LANE, DEFAULT_FAN_LANE)
             self.fan_modes, self.ordered_fan_speeds = get_fan_modes_and_speeds(
@@ -172,6 +166,22 @@ class HomeKitClimateAccessory(HomeAccessory):
         """Refresh RotationSpeed when the linked fan entity changes on its own."""
         self._sync_fan_entity_speed()
 
+    @property
+    def fan_percentage_step(self) -> float:
+        """Return the linked fan's current percentage step.
+
+        Read live rather than cached at construction: a fan entity that is
+        still starting up reports no step at all, and some fans change it
+        later (a preset that swaps the speed list). Caching the value once
+        would leave writes snapping to a step the fan no longer uses.
+        """
+        if self.fan_entity_id is None:
+            return 1.0
+        fan_state = self.hass.states.get(self.fan_entity_id)
+        if fan_state is None:
+            return 1.0
+        return as_float(fan_state.attributes.get(ATTR_PERCENTAGE_STEP)) or 1.0
+
     def _sync_fan_entity_speed(self) -> None:
         """Set RotationSpeed from the linked fan entity's current percentage."""
         if self.char_speed is None or self.fan_entity_id is None:
@@ -179,7 +189,8 @@ class HomeKitClimateAccessory(HomeAccessory):
         fan_state = self.hass.states.get(self.fan_entity_id)
         if fan_state is None:
             return
-        if (percentage := as_float(fan_state.attributes.get(ATTR_PERCENTAGE))) is not None:
+        percentage = as_float(fan_state.attributes.get(ATTR_PERCENTAGE))
+        if percentage is not None:
             self.char_speed.set_value(percentage)
 
     async def async_call_service_and_wait(
@@ -338,7 +349,7 @@ class HomeKitClimateAccessory(HomeAccessory):
             return None
         if speed_value == 0:
             return (SERVICE_TURN_OFF, {})
-        step = self._fan_percentage_step or 1.0
+        step = self.fan_percentage_step or 1.0
         snapped = min(100.0, max(step, round(speed_value / step) * step))
         return (SERVICE_SET_PERCENTAGE, {ATTR_PERCENTAGE: snapped})
 
@@ -363,11 +374,15 @@ class HomeKitClimateAccessory(HomeAccessory):
         if self.fan_entity_id is not None:
             self._sync_fan_entity_speed()
             return
-        if self.ordered_fan_speeds and (
-            speed := fan_mode_to_speed(
-                self.ordered_fan_speeds, attributes.get(ATTR_FAN_MODE)
+        if (
+            self.ordered_fan_speeds
+            and (
+                speed := fan_mode_to_speed(
+                    self.ordered_fan_speeds, attributes.get(ATTR_FAN_MODE)
+                )
             )
-        ) is not None:
+            is not None
+        ):
             self.char_speed.set_value(speed)
 
     def _update_swing_char(self, attributes: Mapping[str, Any]) -> None:
