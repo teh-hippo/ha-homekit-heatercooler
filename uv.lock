@@ -1269,7 +1269,7 @@ dev = [
     { name = "homekit-audio-proxy", specifier = "==1.2.1" },
     { name = "mypy", specifier = ">=1.15" },
     { name = "pyqrcode", specifier = "==1.2.1" },
-    { name = "pyturbojpeg", specifier = "==2.5.0" },
+    { name = "pyturbojpeg", specifier = "==2.6.1" },
     { name = "ruff", specifier = ">=0.13.0" },
 ]
 test-legacy = [{ name = "pytest-homeassistant-custom-component", specifier = "==0.13.348" }]
@@ -2998,14 +2998,14 @@ wheels = [
 
 [[package]]
 name = "pyturbojpeg"
-version = "2.5.0"
+version = "2.6.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/55/fe/b525bca5e85688a283839126095d3e7e6d9bb5e7f23c68e57ad30f43af14/pyturbojpeg-2.5.0.tar.gz", hash = "sha256:572e74886110e0bd85f8a95a188f1cda94c4a5f0222ff38a22d7e12faeb9844b", size = 49265, upload-time = "2026-07-14T16:00:50.511Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/62/f4/0893b94338bec41743d9ec22a49f256db8ae123b920a223169101da506e2/pyturbojpeg-2.6.1.tar.gz", hash = "sha256:94c2c81a1d46534df8eeb49b0c760982683d0707eb09c7b02bdf61ad7e048d99", size = 112363, upload-time = "2026-10-24T05:25:42.11Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/6c/e4/b19be937c95df9a02d6337178088b56fe77c2656eab46489344c7ac510e9/pyturbojpeg-2.5.0-py3-none-any.whl", hash = "sha256:2c10c2de86aa0e4fd9d08de187e46e975d108db35c25842d342393913cf54c36", size = 27455, upload-time = "2026-07-14T16:00:49.05Z" },
+    { url = "https://files.pythonhosted.org/packages/06/9e/a19c44e18f999dacba7d309a06f2e89687569330051b82d42327a5fab714/pyturbojpeg-2.6.1-py3-none-any.whl", hash = "sha256:2e3b992b708c2ccb316853f1b0ab43a89218fec10af0a2fbbda266a7a72b36d1", size = 37374, upload-time = "2026-10-24T05:25:40.623Z" },
 ]
 
 [[package]]
