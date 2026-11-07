@@ -1265,7 +1265,7 @@ dev = [
     { name = "coverage", specifier = ">=7" },
     { name = "fnv-hash-fast", specifier = "==2.0.3" },
     { name = "ha-ffmpeg", specifier = ">=3.2.2" },
-    { name = "hap-python", specifier = "==5.0.0" },
+    { name = "hap-python", specifier = "==5.1.0" },
     { name = "homekit-audio-proxy", specifier = "==1.2.1" },
     { name = "mypy", specifier = ">=1.15" },
     { name = "pyqrcode", specifier = "==1.2.1" },
@@ -1313,7 +1313,7 @@ wheels = [
 
 [[package]]
 name = "hap-python"
-version = "5.0.0"
+version = "5.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "chacha20poly1305-reuseable" },
@@ -1323,9 +1323,9 @@ dependencies = [
     { name = "zeroconf", version = "0.150.0", source = { registry = "https://pypi.org/simple" }, marker = "extra == 'group-23-ha-homekit-heatercooler-test-legacy'" },
     { name = "zeroconf", version = "0.151.5", source = { registry = "https://pypi.org/simple" }, marker = "extra != 'group-23-ha-homekit-heatercooler-test-legacy' or extra == 'group-23-ha-homekit-heatercooler-test-native'" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d2/c1/5eaf042f06183ea87976f525bc69c309f57b20dabf2787023464b88b0393/hap_python-5.0.0.tar.gz", hash = "sha256:455d3ac0721cc9cbb6373cf8c9422c3182db2d95c472f94d3a65cc94dda7434d", size = 290982, upload-time = "2025-08-25T12:11:59.945Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/6a/12/94ee6829c33bcd80441e48c93b18249dc8799dacda10afb65336d4cc12e3/hap_python-5.1.0.tar.gz", hash = "sha256:0a175765b37454f4c54b02449f85a9980d90f1757653d519bc7d3abc7e3bee96", size = 320675, upload-time = "2026-11-04T15:25:01.095Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/71/eb/57af891c844f80b193cc1da96e55ca14430e16739c12a7b48f21585f3d36/hap_python-5.0.0-py3-none-any.whl", hash = "sha256:c1ca3abc68adbfb0a4a50be3fff2399ab7ed7ac3d91f66f4e9d9d26037c04ed7", size = 264621, upload-time = "2025-08-25T12:11:58.668Z" },
+    { url = "https://files.pythonhosted.org/packages/25/aa/36cc8a15e46991f97ba23a3731887966a342adc5dc2427aca4536c6e3669/hap_python-5.1.0-py3-none-any.whl", hash = "sha256:c2dc8149eb82f63181ee596aa0104ff04e3ab5b75a31533a1f0b7b858fe07d06", size = 289619, upload-time = "2026-11-04T15:24:59.463Z" },
 ]
 
 [[package]]
