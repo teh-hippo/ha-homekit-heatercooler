@@ -3,6 +3,13 @@
   "extends": ["github>teh-hippo/common-repo-configs//renovate/default.json5"],
   "packageRules": [
     {
+      "description": "Keep the Python requirement aligned with the supported Home Assistant runtime",
+      "matchManagers": ["pep621"],
+      "matchDepTypes": ["requires-python"],
+      "matchPackageNames": ["python"],
+      "allowedVersions": "<3.15"
+    },
+    {
       "description": "Preserve the pre-native HomeKit HeaterCooler compatibility leg",
       "matchManagers": ["pep621"],
       "matchPackageNames": ["pytest-homeassistant-custom-component"],
