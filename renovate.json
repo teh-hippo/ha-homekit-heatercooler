@@ -1,7 +1,24 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": ["github>teh-hippo/common-repo-configs//renovate/default.json5"],
+  "customManagers": [
+    {
+      "customType": "regex",
+      "managerFilePatterns": ["/^\\.github\\/workflows\\/harness-smoke\\.yml$/"],
+      "matchStrings": ["image: &native-image (?<depName>ghcr\\.io/home-assistant/home-assistant):(?<currentValue>\\S+) # renovate: native-home-assistant"],
+      "datasourceTemplate": "docker",
+      "versioningTemplate": "regex:^(?<major>\\d{4})\\.(?<minor>[1-9]|1[0-2])$"
+    }
+  ],
   "packageRules": [
+    {
+      "description": "Allow native month tags without release timestamps; test the image in CI",
+      "matchManagers": ["custom.regex"],
+      "matchDatasources": ["docker"],
+      "matchPackageNames": ["ghcr.io/home-assistant/home-assistant"],
+      "minimumReleaseAgeBehaviour": "timestamp-optional",
+      "pinDigests": false
+    },
     {
       "description": "Keep the Python requirement aligned with the supported Home Assistant runtime",
       "matchManagers": ["pep621"],

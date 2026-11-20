@@ -166,7 +166,9 @@ HARNESS_DIR=/path/to/ha-test-harness
   --seed-config "$PWD/tests/harness/configuration.yaml"
 ```
 
-Use the harness's [HomeKit smoke](https://github.com/teh-hippo/ha-test-harness/tree/master/homekit) to pair, assert the two accessory types, and unpair the disposable bridge. [`tests/harness/hap_write_smoke.py`](tests/harness/hap_write_smoke.py) verifies that a HAP target-mode write reaches Mock Daikin. The **HAP harness smoke** workflow runs it against both core generations on every push to `master` and weekly, and asserts they produce the same accessory shape.
+Use the harness's [HomeKit smoke](https://github.com/teh-hippo/ha-test-harness/tree/master/homekit) to pair, assert the two accessory types, and unpair the disposable bridge. [`tests/harness/hap_write_smoke.py`](tests/harness/hap_write_smoke.py) verifies that a HAP target-mode write reaches Mock Daikin.
+The [HAP harness smoke workflow](.github/workflows/harness-smoke.yml) checks both Core generations on relevant pull requests and pushes to `master`, and runs weekly to catch new patches within the tested native month.
+The legacy image stays at `2026.7.4`. Renovate proposes new stable native months through pull requests so the smoke and pairing checks run before the baseline moves.
 
 ### Upgrading an already-paired bridge
 
