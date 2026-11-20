@@ -20,9 +20,8 @@
       "pinDigests": false
     },
     {
-      "description": "Keep the Python requirement aligned with the supported Home Assistant runtime",
-      "matchManagers": ["pep621"],
-      "matchDepTypes": ["requires-python"],
+      "description": "Keep Python aligned with the supported Home Assistant runtime",
+      "matchManagers": ["pep621", "pyenv"],
       "matchPackageNames": ["python"],
       "allowedVersions": "<3.15"
     },
