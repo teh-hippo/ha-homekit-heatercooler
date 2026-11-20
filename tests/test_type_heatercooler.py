@@ -8,6 +8,7 @@ import pytest
 from pytest_homeassistant_custom_component.common import async_mock_service
 
 from custom_components.homekit_heatercooler.const import (
+    CHAR_NAME,
     CONF_FAN_ENTITY_ID,
     CONF_FAN_LANE,
     FAN_LANE_AUTO,
@@ -95,7 +96,9 @@ async def test_basic_accessory_exposes_core_characteristics(
     assert accessory.char_current_state.value == HC_IDLE
     assert accessory.char_target_state.value == HC_TARGET_COOL
     assert accessory.char_cool.value == 22
-    assert accessory.get_service(SERV_HEATER_COOLER).is_primary_service is True
+    service = accessory.get_service(SERV_HEATER_COOLER)
+    assert service.is_primary_service is True
+    assert service.get_characteristic(CHAR_NAME).value == accessory.display_name
 
 
 async def test_cool_and_heat_only_entities_expose_one_threshold(

@@ -189,8 +189,10 @@ class HeaterCooler(HomeKitClimateAccessory):
             chars.append(CHAR_ROTATION_SPEED)
         if self.swing_on_mode is not None:
             chars.append(CHAR_SWING_MODE)
+        chars.append(CHAR_NAME)
 
         service = self.add_preload_service(SERV_HEATER_COOLER, chars)
+        service.configure_char(CHAR_NAME, value=self.display_name)
         self.char_active = service.configure_char(CHAR_ACTIVE, value=0)
         self.char_current_state = service.configure_char(
             CHAR_CURRENT_HEATER_COOLER_STATE, value=HC_INACTIVE
