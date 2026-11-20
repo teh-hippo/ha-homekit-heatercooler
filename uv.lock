@@ -1232,7 +1232,7 @@ wheels = [
 
 [[package]]
 name = "ha-homekit-heatercooler"
-version = "1.7.0"
+version = "1.7.1"
 source = { virtual = "." }
 default-groups = ["dev", "test-legacy"]
 
