@@ -1,6 +1,25 @@
 # CHANGELOG
 
 
+## v1.8.0 (2026-11-26)
+
+### Chores
+
+- **deps**: Lock file maintenance
+  ([`05a86b6`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/05a86b6482ef59cab6e9e2236d22fed3cfd6ad3d))
+
+- **deps**: Lock file maintenance
+  ([`c418a34`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/c418a34ea9554979da9b882edbcb934abc04c383))
+
+- **deps**: Update astral-sh/setup-uv action to v10.4.0
+  ([`439bba6`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/439bba69b57c0444f2d3c7291c3f3583ef3fe03d))
+
+### Features
+
+- Support Home Assistant 2026.11
+  ([`24df493`](https://github.com/teh-hippo/ha-homekit-heatercooler/commit/24df49362c2dc27b5b2ef704c559d9d49a8c5757))
+
+
 ## v1.7.1 (2026-11-20)
 
 ### Bug Fixes
