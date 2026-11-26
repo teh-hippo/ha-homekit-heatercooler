@@ -12,6 +12,16 @@ from homeassistant.components.climate import (
 from homeassistant.const import ATTR_SUPPORTED_FEATURES
 from homeassistant.core import HomeAssistant
 
+try:
+    from pytest_homeassistant.common import MockConfigEntry, async_mock_service
+except ImportError:
+    from pytest_homeassistant_custom_component.common import (
+        MockConfigEntry,
+        async_mock_service,
+    )
+
+__all__ = ["ENTITY_ID", "MockConfigEntry", "async_mock_service", "set_climate"]
+
 ENTITY_ID = "climate.test"
 
 

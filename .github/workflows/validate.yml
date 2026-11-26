@@ -66,9 +66,11 @@ jobs:
         include:
           - core: legacy
             group: test-legacy
+            version: "2026.7.4"
             native: "no"
           - core: native
             group: test-native
+            version: "2026.11.3"
             native: "yes"
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -84,6 +86,7 @@ jobs:
       - name: Assert the core generation under test
         env:
           EXPECT_NATIVE: ${{ matrix.native }}
+          EXPECT_VERSION: ${{ matrix.version }}
         run: |
           set -euo pipefail
           version="$(uv run --no-sync python -c 'from homeassistant.const import __version__ as v; print(v)')"
@@ -96,6 +99,11 @@ jobs:
           print("yes" if spec else "no")
           ' 2>/dev/null)"
           echo "Home Assistant $version (native HeaterCooler: $native)"
+          if [ "$version" != "$EXPECT_VERSION" ]; then
+            echo "::error::${{ matrix.core }} leg expected Home Assistant" \
+              "$EXPECT_VERSION, got $version" >&2
+            exit 1
+          fi
           if [ "$native" != "$EXPECT_NATIVE" ]; then
             echo "::error::${{ matrix.core }} leg expected native HeaterCooler" \
               "$EXPECT_NATIVE, got $native on $version" >&2

@@ -2,6 +2,7 @@
   "domain": "homekit_heatercooler",
   "name": "HomeKit HeaterCooler Bridge",
   "after_dependencies": ["homekit"],
+  "categories": ["other_ecosystems", "climate"],
   "codeowners": ["@teh-hippo"],
   "config_flow": true,
   "dependencies": ["homekit"],

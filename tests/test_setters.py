@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import pytest
-from pytest_homeassistant_custom_component.common import async_mock_service
 
 from custom_components.homekit_heatercooler.const import CONF_FAN_LANE, FAN_LANE_MANUAL
 from custom_components.homekit_heatercooler.type_heatercooler import (
@@ -31,7 +30,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_SUPPORTED_FEATURES
 from homeassistant.core import HomeAssistant
-from tests.common import ENTITY_ID, set_climate
+from tests.common import ENTITY_ID, async_mock_service, set_climate
 
 
 def _accessory(

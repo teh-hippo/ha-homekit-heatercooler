@@ -5,7 +5,6 @@ from __future__ import annotations
 import asyncio
 
 import pytest
-from pytest_homeassistant_custom_component.common import async_mock_service
 
 from custom_components.homekit_heatercooler.const import (
     CHAR_NAME,
@@ -68,7 +67,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant, ServiceCall, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.unit_system import US_CUSTOMARY_SYSTEM
-from tests.common import ENTITY_ID, set_climate
+from tests.common import ENTITY_ID, async_mock_service, set_climate
 
 SEVEN_FAN_MODES = ["Auto", "Low", "Mid", "High", "Low/Auto", "Mid/Auto", "High/Auto"]
 

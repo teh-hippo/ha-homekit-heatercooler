@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from pytest_homeassistant_custom_component.common import MockConfigEntry
-
 from custom_components.homekit_heatercooler.config_flow import _normalize_input
 from custom_components.homekit_heatercooler.const import (
     CONF_FAN_ENTITIES,
@@ -20,6 +18,7 @@ from homeassistant.helpers.entityfilter import (
     CONF_EXCLUDE_ENTITIES,
     CONF_INCLUDE_ENTITIES,
 )
+from tests.common import MockConfigEntry
 
 
 async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:

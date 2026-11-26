@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from pytest_homeassistant_custom_component.common import MockConfigEntry
-
 from custom_components.homekit_heatercooler.const import (
     CONF_FAN_ENTITIES,
     DATA_PATCH_STATE,
@@ -14,7 +12,7 @@ from homeassistant.components.climate import ATTR_FAN_MODES, ATTR_HVAC_MODES, HV
 from homeassistant.const import ATTR_SUPPORTED_FEATURES
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entityfilter import CONF_INCLUDE_ENTITIES
-from tests.common import ENTITY_ID, set_climate
+from tests.common import ENTITY_ID, MockConfigEntry, set_climate
 
 
 async def test_setup_and_unload_installs_and_removes_patch(hass: HomeAssistant) -> None:

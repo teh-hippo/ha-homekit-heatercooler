@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 from pyhap.const import HAP_REPR_AID, HAP_REPR_CHARS, HAP_REPR_IID, HAP_REPR_VALUE
-from pytest_homeassistant_custom_component.common import async_mock_service
 
 from custom_components.homekit_heatercooler.type_heatercooler import HeaterCooler
 from homeassistant.components.climate import (
@@ -25,7 +24,7 @@ from homeassistant.components.climate import (
 from homeassistant.components.homekit.accessories import HomeDriver
 from homeassistant.const import ATTR_SUPPORTED_FEATURES
 from homeassistant.core import HomeAssistant
-from tests.common import ENTITY_ID, set_climate
+from tests.common import ENTITY_ID, async_mock_service, set_climate
 
 
 async def _accessory(hass: HomeAssistant, driver: HomeDriver) -> HeaterCooler:

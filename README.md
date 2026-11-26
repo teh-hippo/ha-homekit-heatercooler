@@ -67,7 +67,20 @@ For reference, the fan speeds each side offers:
 
 ## Installation
 
-### HACS (recommended)
+### Marketplace (Home Assistant 2026.11+)
+
+If the integration is not in the Marketplace catalogue:
+
+1. Open **Settings → Marketplace**
+2. Select **Add from link** and enter `https://github.com/teh-hippo/ha-homekit-heatercooler`
+3. Connect GitHub when prompted
+4. Select **Integration**, then install **HomeKit HeaterCooler Bridge**
+5. Continue into the setup flow that opens after installation
+
+Custom repositories require a GitHub connection.  A first install with a config
+flow can load without restarting; Marketplace updates still require a restart.
+
+### HACS (Home Assistant 2026.10 and earlier)
 
 1. Open HACS in Home Assistant
 2. Click **⋮ → Custom repositories**
@@ -75,7 +88,7 @@ For reference, the fan speeds each side offers:
 4. Install **HomeKit HeaterCooler Bridge**
 5. Restart Home Assistant
 
-### Manual
+### Manual (all supported versions)
 
 1. Copy `custom_components/homekit_heatercooler` to `<HA_CONFIG>/custom_components/`
 2. Restart Home Assistant
@@ -152,7 +165,10 @@ The diagnostic sensor reports the active route and whether the running core has 
 bash scripts/check.sh
 ```
 
-Requires [uv](https://docs.astral.sh/uv/). Uses [Conventional Commits](https://www.conventionalcommits.org/).
+Requires [uv](https://docs.astral.sh/uv/). The test matrix runs the legacy
+Home Assistant 2026.7.4 leg with
+`pytest-homeassistant-custom-component`, and the native Home Assistant 2026.11.3
+leg with the official `pytest-homeassistant` plugin. Uses [Conventional Commits](https://www.conventionalcommits.org/).
 
 ### Hardware-free end-to-end smoke
 
